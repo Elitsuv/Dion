@@ -7,21 +7,22 @@ import json
 import os
 import random
 import time
+import re
 
 CONFIG_FILE = "chain_config.json"
 
 def load_chain_config():
     if not os.path.exists(CONFIG_FILE):
-        return None
+        return {"channel_id": None, "mode": "bot"}
     with open(CONFIG_FILE, "r") as f:
         try:
-            return json.load(f).get("channel_id")
+            return json.load(f)
         except:
-            return None
+            return {"channel_id": None, "mode": "bot"}
 
-def save_chain_config(channel_id):
+def save_chain_config(channel_id, mode):
     with open(CONFIG_FILE, "w") as f:
-        json.dump({"channel_id": channel_id}, f)
+        json.dump({"channel_id": channel_id, "mode": mode}, f)
 
 COUNTRIES = {
     "afghanistan", "albania", "algeria", "andorra", "angola", "antigua and barbuda", "argentina", "armenia", "australia", 
@@ -47,6 +48,48 @@ COUNTRIES = {
     "ukraine", "united arab emirates", "united kingdom", "united states", "united states of america", "uruguay", 
     "uzbekistan", "vanuatu", "venezuela", "vietnam", "yemen", "zambia", "zimbabwe", "us", "usa", "uk", "uae"
 }
+
+ISO_MAP = {
+    "afghanistan": "af", "albania": "al", "algeria": "dz", "andorra": "ad", "angola": "ao", "antigua and barbuda": "ag",
+    "argentina": "ar", "armenia": "am", "australia": "au", "austria": "at", "azerbaijan": "az", "bahamas": "bs",
+    "bahrain": "bh", "bangladesh": "bd", "barbados": "bb", "belarus": "by", "belgium": "be", "belize": "bz",
+    "benin": "bj", "bhutan": "bt", "bolivia": "bo", "bosnia and herzegovina": "ba", "botswana": "bw", "brazil": "br",
+    "brunei": "bn", "bulgaria": "bg", "burkina faso": "bf", "burundi": "bi", "cabo verde": "cv", "cambodia": "kh",
+    "cameroon": "cm", "canada": "ca", "central african republic": "cf", "chad": "td", "chile": "cl", "china": "cn",
+    "colombia": "co", "comoros": "km", "congo": "cg", "costa rica": "cr", "croatia": "hr", "cuba": "cu", "cyprus": "cy",
+    "czechia": "cz", "czech republic": "cz", "denmark": "dk", "djibouti": "dj", "dominica": "dm", "dominican republic": "do",
+    "east timor": "tl", "ecuador": "ec", "egypt": "eg", "el salvador": "sv", "equatorial guinea": "gq", "eritrea": "er",
+    "estonia": "ee", "eswatini": "sz", "ethiopia": "et", "fiji": "fj", "finland": "fi", "france": "fr", "gabon": "ga",
+    "gambia": "gm", "georgia": "ge", "germany": "de", "ghana": "gh", "greece": "gr", "grenada": "gd", "guatemala": "gt",
+    "guinea": "gn", "guinea-bissau": "gw", "guyana": "gy", "haiti": "ht", "honduras": "hn", "hungary": "hu", "iceland": "is",
+    "india": "in", "indonesia": "id", "iran": "ir", "iraq": "iq", "ireland": "ie", "israel": "il", "italy": "it",
+    "ivory coast": "ci", "jamaica": "jm", "japan": "jp", "jordan": "jo", "kazakhstan": "kz", "kenya": "ke", "kiribati": "ki",
+    "kuwait": "kw", "kyrgyzstan": "kg", "laos": "la", "latvia": "lv", "lebanon": "lb", "lesotho": "ls", "liberia": "lr",
+    "libya": "ly", "liechtenstein": "li", "lithuania": "lt", "luxembourg": "lu", "madagascar": "mg", "malawi": "mw",
+    "malaysia": "my", "maldives": "mv", "mali": "ml", "malta": "mt", "marshall islands": "mh", "mauritania": "mr",
+    "mauritius": "mu", "mexico": "mx", "micronesia": "fm", "moldova": "md", "monaco": "mc", "mongolia": "mn",
+    "montenegro": "me", "morocco": "ma", "mozambique": "mz", "myanmar": "mm", "namibia": "na", "nauru": "nr",
+    "nepal": "np", "netherlands": "nl", "new zealand": "nz", "nicaragua": "ni", "niger": "ne", "nigeria": "ng",
+    "north korea": "kp", "north macedonia": "mk", "norway": "no", "oman": "om", "pakistan": "pk", "palau": "pw",
+    "palestine": "ps", "panama": "pa", "papua new guinea": "pg", "paraguay": "py", "peru": "pe", "philippines": "ph",
+    "poland": "pl", "portugal": "pt", "qatar": "qa", "romania": "ro", "russia": "ru", "rwanda": "rw",
+    "saint kitts and nevis": "kn", "saint lucia": "lc", "saint vincent and the grenadines": "vc", "samoa": "ws",
+    "san marino": "sm", "sao tome and principe": "st", "saudi arabia": "sa", "senegal": "sn", "serbia": "rs",
+    "seychelles": "sc", "sierra leone": "sl", "singapore": "sg", "slovakia": "sk", "slovenia": "si", "solomon islands": "sb",
+    "somalia": "so", "south africa": "za", "south korea": "kr", "south sudan": "ss", "spain": "es", "sri lanka": "lk",
+    "sudan": "sd", "suriname": "sr", "sweden": "se", "switzerland": "ch", "syria": "sy", "tajikistan": "tj",
+    "tanzania": "tz", "thailand": "th", "timor-leste": "tl", "togo": "tg", "tonga": "to", "trinidad and tobago": "tt",
+    "tunisia": "tn", "turkey": "tr", "turkmenistan": "tm", "tuvalu": "tv", "uganda": "ug", "ukraine": "ua",
+    "united arab emirates": "ae", "united kingdom": "gb", "united states": "us", "united states of america": "us",
+    "uruguay": "uy", "uzbekistan": "uz", "vanuatu": "vu", "venezuela": "ve", "vietnam": "vn", "yemen": "ye",
+    "zambia": "zm", "zimbabwe": "zw", "us": "us", "usa": "us", "uk": "gb", "uae": "ae"
+}
+
+def get_flag_emoji(country_name):
+    code = ISO_MAP.get(country_name.lower())
+    if not code:
+        return "🏳️"
+    return "".join(chr(127462 + ord(c) - 97) for c in code.lower())
 
 class TicTacToeButton(discord.ui.Button['TicTacToeView']):
     def __init__(self, x: int, y: int):
@@ -95,7 +138,7 @@ class TicTacToeButton(discord.ui.Button['TicTacToeView']):
             from cogs.engine import save_data
 
             if winner == view.X:
-                content = f"🏆 **{view.player1.mention} won against {view.player2.mention}!** (+50 🪙)"
+                content = f"🏆 **{view.player1.mention} won against {view.player2.mention}!**\n🪙✨ **+50 Coins** added to profile!"
                 if engine_cog:
                     uid = str(view.player1.id)
                     engine_cog.users.setdefault(uid, {"xp": 0, "level": 1, "coins": 0})
@@ -105,14 +148,14 @@ class TicTacToeButton(discord.ui.Button['TicTacToeView']):
                 if view.player2.bot:
                     content = f"🏆 **{view.player2.mention} (Bot) won against {view.player1.mention}!**"
                 else:
-                    content = f"🏆 **{view.player2.mention} won against {view.player1.mention}!** (+50 🪙)"
+                    content = f"🏆 **{view.player2.mention} won against {view.player1.mention}!**\n🪙✨ **+50 Coins** added to profile!"
                     if engine_cog:
                         uid = str(view.player2.id)
                         engine_cog.users.setdefault(uid, {"xp": 0, "level": 1, "coins": 0})
                         engine_cog.users[uid]["coins"] = engine_cog.users[uid].get("coins", 0) + 50
                         save_data(engine_cog.users)
             else:
-                content = f"🤝 **It's a tie between {view.player1.mention} and {view.player2.mention}!** (+5 🪙 each)"
+                content = f"🤝 **It's a tie between {view.player1.mention} and {view.player2.mention}!**\n🪙 **+5 Coins** added to each profile!"
                 if engine_cog:
                     for player in (view.player1, view.player2):
                         if not player.bot:
@@ -158,7 +201,7 @@ class TicTacToeButton(discord.ui.Button['TicTacToeView']):
                     from cogs.engine import save_data
 
                     if winner == view.X:
-                        content = f"🏆 **{view.player1.mention} won against {view.player2.mention}!** (+50 🪙)"
+                        content = f"🏆 **{view.player1.mention} won against {view.player2.mention}!**\n🪙✨ **+50 Coins** added to profile!"
                         if engine_cog:
                             uid = str(view.player1.id)
                             engine_cog.users.setdefault(uid, {"xp": 0, "level": 1, "coins": 0})
@@ -167,7 +210,7 @@ class TicTacToeButton(discord.ui.Button['TicTacToeView']):
                     elif winner == view.O:
                         content = f"🏆 **{view.player2.mention} (Bot) won against {view.player1.mention}!**"
                     else:
-                        content = f"🤝 **It's a tie between {view.player1.mention} and {view.player2.mention}!** (+5 🪙)"
+                        content = f"🤝 **It's a tie between {view.player1.mention} and {view.player2.mention}!**\n🪙 **+5 Coins** added to profile!"
                         if engine_cog:
                             uid = str(view.player1.id)
                             engine_cog.users.setdefault(uid, {"xp": 0, "level": 1, "coins": 0})
@@ -292,10 +335,88 @@ class TicTacToeView(discord.ui.View):
             except discord.HTTPException:
                 pass
 
+
+class StreakSaveView(discord.ui.View):
+    def __init__(self, bot, games_cog, previous_streak, previous_last_country, previous_used_countries, previous_last_user_id, channel):
+        super().__init__(timeout=10)
+        self.bot = bot
+        self.games_cog = games_cog
+        self.previous_streak = previous_streak
+        self.previous_last_country = previous_last_country
+        self.previous_used_countries = previous_used_countries
+        self.previous_last_user_id = previous_last_user_id
+        self.channel = channel
+        self.saved = False
+        self.message = None
+
+    @discord.ui.button(label="Save Streak (50 🪙)", style=discord.ButtonStyle.primary, emoji="🛡️")
+    async def save_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        engine_cog = self.bot.get_cog('Engine')
+        if not engine_cog:
+            await interaction.response.send_message("❌ Economy system is unavailable.", ephemeral=True)
+            return
+
+        user_id = str(interaction.user.id)
+        user_data = engine_cog.users.get(user_id, {"coins": 0})
+        user_coins = user_data.get("coins", 0)
+
+        if user_coins < 50:
+            await interaction.response.send_message("❌ You do not have enough coins! (Requires 50 🪙)", ephemeral=True)
+            return
+
+        # Deduct coins from user
+        engine_cog.users[user_id]["coins"] = user_coins - 50
+        # Add to Dion Bank
+        engine_cog.users.setdefault("dion_bank", {"coins": 0})
+        engine_cog.users["dion_bank"]["coins"] = engine_cog.users["dion_bank"].get("coins", 0) + 50
+        
+        from cogs.engine import save_data
+        save_data(engine_cog.users)
+
+        self.saved = True
+        self.stop()
+        button.disabled = True
+        await interaction.response.edit_message(content="🛡️ **Streak has been saved!**", view=self)
+
+        # Restore games cog state
+        self.games_cog.chain_state = {
+            "last_country": self.previous_last_country,
+            "last_user_id": self.previous_last_user_id,
+            "used_countries": self.previous_used_countries,
+            "streak": self.previous_streak,
+            "last_played_time": time.time(),
+            "last_message_id": 0
+        }
+
+        last_letter = self.previous_last_country[-1]
+        flag = get_flag_emoji(self.previous_last_country)
+        next_msg = await self.channel.send(
+            f"🛡️ **Streak Saved by {interaction.user.mention}!** Paid **50 🪙** to Dion's Bank.\n"
+            f"The streak remains at **{self.previous_streak}** (Last: `{self.previous_last_country.title()}` {flag}).\n"
+            f"Next country must start with **{last_letter.upper()}**."
+        )
+        self.games_cog.chain_state["last_message_id"] = next_msg.id
+
+    async def on_timeout(self):
+        if not self.saved:
+            self.games_cog.reset_chain()
+            for child in self.children:
+                child.disabled = True
+            try:
+                if self.message:
+                    await self.message.edit(content="⏳ **Streak save expired!**", view=self)
+            except:
+                pass
+            await self.channel.send("⏳ **Time's up!** The streak could not be saved and has reset to 0.")
+            await self.games_cog.send_rules_msg(self.channel)
+
+
 class Games(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.chain_channel_id = load_chain_config()
+        config = load_chain_config()
+        self.chain_channel_id = config.get("channel_id")
+        self.chain_mode = config.get("mode", "bot")
         self.reset_chain()
 
     def reset_chain(self):
@@ -304,8 +425,57 @@ class Games(commands.Cog):
             "last_user_id": 0,
             "used_countries": set(),
             "streak": 0,
-            "last_played_time": 0.0
+            "last_played_time": 0.0,
+            "last_message_id": 0
         }
+
+    async def send_rules_msg(self, channel):
+        mode_text = "🧑‍🤝‍🧑 **User vs User (Multiplayer)**" if self.chain_mode == "players" else "🤖 **User vs Dion Bot (Co-op)**"
+        embed = discord.Embed(
+            title="🌍 Country Word Chain Game",
+            description=(
+                f"**Current Mode:** {mode_text}\n\n"
+                "📜 **Rules & How to Play:**\n"
+                "1. Enter a country name that starts with the **last letter** of the previous country.\n"
+                "2. ⚠️ **IMPORTANT:** You **MUST reply** directly to the bot's latest game message to guess. This ignores normal chats!\n"
+                "3. You have only **15 seconds** to reply (Anti-Google speed check!).\n"
+                "4. You cannot post twice in a row.\n"
+                "5. Duplicate/wrong countries break the streak.\n\n"
+                "🎁 **Rewards:**\n"
+                "🪙 **+15 Coins** added to your profile per correct guess!\n"
+                "🔥 Milestone announcements every 10 streaks!"
+            ),
+            color=0xFFB347
+        )
+        msg = await channel.send(embed=embed)
+        self.chain_state["last_message_id"] = msg.id
+        self.chain_state["last_played_time"] = time.time()
+
+    async def trigger_streak_save_challenge(self, channel, reason_msg):
+        # Trigger streak save only if streak > 0
+        if self.chain_state["streak"] > 0:
+            previous_streak = self.chain_state["streak"]
+            previous_last_country = self.chain_state["last_country"]
+            previous_used_countries = self.chain_state["used_countries"].copy()
+            previous_last_user_id = self.chain_state["last_user_id"]
+            
+            # Reset immediately in case they don't buy it
+            self.reset_chain()
+            
+            view = StreakSaveView(
+                self.bot, self, previous_streak, previous_last_country, 
+                previous_used_countries, previous_last_user_id, channel
+            )
+            prompt_msg = await channel.send(
+                f"💥 **{reason_msg}**\n"
+                f"Streak broken at **{previous_streak}**. Click below within 10s to save the streak for **50 🪙**!",
+                view=view
+            )
+            self.chain_state["last_message_id"] = prompt_msg.id
+            view.message = prompt_msg
+        else:
+            self.reset_chain()
+            await self.send_rules_msg(channel)
 
     @app_commands.command(name='tictactoe', description="Play Tic-Tac-Toe with a friend or Dion!")
     async def tictactoe(self, interaction: discord.Interaction, opponent: discord.Member):
@@ -325,16 +495,37 @@ class Games(commands.Cog):
         view.message = await interaction.original_response()
 
     @app_commands.command(name='set_country_chain', description="Sets the active channel for the Country Word Chain game.")
+    @app_commands.describe(
+        channel="The channel for playing Country Word Chain",
+        mode="Game mode: 'bot' (VS Dion) or 'players' (User vs User)"
+    )
+    @app_commands.choices(mode=[
+        app_commands.Choice(name="User vs Bot (Co-op)", value="bot"),
+        app_commands.Choice(name="User vs User (Multiplayer)", value="players")
+    ])
     @app_commands.default_permissions(manage_channels=True)
-    async def set_country_chain(self, interaction: discord.Interaction, channel: discord.TextChannel):
+    async def set_country_chain(self, interaction: discord.Interaction, channel: discord.TextChannel, mode: str = "bot"):
         """Sets the active channel for the Country Word Chain game."""
         self.chain_channel_id = channel.id
-        save_chain_config(channel.id)
+        self.chain_mode = mode
+        save_chain_config(channel.id, mode)
         self.reset_chain()
-        await interaction.response.send_message(
-            f"🌍 **Country Word Chain** channel has been set to {channel.mention}!\n"
-            f"The game has been initialized. Send a country name to start!"
-        )
+        
+        await interaction.response.send_message(f"🌍 Country Chain channel set to {channel.mention} in **{mode}** mode!")
+        await self.send_rules_msg(channel)
+
+    @app_commands.command(name='stop_country_chain', description="Stops the Country Word Chain game in this channel.")
+    @app_commands.default_permissions(manage_channels=True)
+    async def stop_country_chain(self, interaction: discord.Interaction):
+        """Stops the Country Word Chain game in this channel."""
+        if self.chain_channel_id is None:
+            await interaction.response.send_message("❌ No Country Word Chain game is currently active.", ephemeral=True)
+            return
+            
+        self.chain_channel_id = None
+        save_chain_config(None, self.chain_mode)
+        self.reset_chain()
+        await interaction.response.send_message("🌍 **Country Word Chain game has been stopped.** Channel bindings cleared.")
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -348,26 +539,31 @@ class Games(commands.Cog):
         if message.content.startswith("/"):
             return
 
-        country_input = message.content.strip().lower()
+        # Make sure user replies to the previous response in the game chain
+        if self.chain_state["last_message_id"] > 0:
+            if not message.reference or message.reference.message_id != self.chain_state["last_message_id"]:
+                return  # DO NOT respond or reset if it is just a normal text chat message!
 
-        # 1. Anti-Google timer check (10s limit)
+        # Normalize input: remove punctuation/emojis, lowercase, strip
+        country_input = re.sub(r'[^\w\s-]', '', message.content).strip().lower()
+
+        # 1. Anti-Google timer check (15s limit)
         current_time = time.time()
         if self.chain_state["last_country"] and self.chain_state["last_played_time"] > 0:
             elapsed = current_time - self.chain_state["last_played_time"]
-            if elapsed > 10.0:
+            if elapsed > 15.0:
                 await message.add_reaction("❌")
-                await message.channel.send(
-                    f"⏳ {message.author.mention}, **Time's up!** You took **{elapsed:.1f}s** to answer (limit: 10s). **Streak reset to 0.**", 
-                    delete_after=10
+                await self.trigger_streak_save_challenge(
+                    message.channel, 
+                    f"⏳ {message.author.mention} took **{elapsed:.1f}s** to answer (limit: 15s)!"
                 )
-                self.reset_chain()
                 return
 
         # 2. Check double posting
         if self.chain_state["last_user_id"] == message.author.id:
             await message.add_reaction("❌")
             await message.channel.send(
-                f"⚠️ {message.author.mention}, you cannot go twice in a row!", 
+                f"⚠️ {message.author.mention}, you cannot guess twice in a row!", 
                 delete_after=5
             )
             return
@@ -375,11 +571,10 @@ class Games(commands.Cog):
         # 3. Check if it's a valid country
         if country_input not in COUNTRIES:
             await message.add_reaction("❌")
-            await message.channel.send(
-                f"⚠️ `{message.content}` is not recognized as a valid country! **Streak reset to 0.**", 
-                delete_after=5
+            await self.trigger_streak_save_challenge(
+                message.channel,
+                f"⚠️ `{message.content}` is not recognized as a valid country!"
             )
-            self.reset_chain()
             return
 
         # 4. Check starting letter match
@@ -387,28 +582,29 @@ class Games(commands.Cog):
             last_char = self.chain_state["last_country"][-1]
             if country_input[0] != last_char:
                 await message.add_reaction("❌")
-                await message.channel.send(
-                    f"⚠️ `{message.content}` does not start with **{last_char.upper()}**! **Streak reset to 0.**", 
-                    delete_after=5
+                await self.trigger_streak_save_challenge(
+                    message.channel,
+                    f"⚠️ `{message.content}` does not start with **{last_char.upper()}**!"
                 )
-                self.reset_chain()
                 return
 
         # 5. Check if it was already used
         if country_input in self.chain_state["used_countries"]:
             await message.add_reaction("❌")
-            await message.channel.send(
-                f"⚠️ `{message.content}` has already been used in this chain! **Streak reset to 0.**", 
-                delete_after=5
+            await self.trigger_streak_save_challenge(
+                message.channel,
+                f"⚠️ `{message.content}` has already been used in this chain!"
             )
-            self.reset_chain()
             return
 
         # Valid Country! Update state
+        flag = get_flag_emoji(country_input)
         self.chain_state["last_country"] = country_input
         self.chain_state["last_user_id"] = message.author.id
         self.chain_state["used_countries"].add(country_input)
         self.chain_state["streak"] += 1
+        self.chain_state["last_message_id"] = message.id
+        self.chain_state["last_played_time"] = time.time()
 
         await message.add_reaction("✅")
 
@@ -436,6 +632,9 @@ class Games(commands.Cog):
             from cogs.engine import save_data
             save_data(engine_cog.users)
 
+        # Notify correct play & coin reward
+        coin_txt = await message.channel.send(f"🪙 **+15 Coins** added to {message.author.mention}'s vault! (Streak: **{self.chain_state['streak']}**)")
+        
         # Notify milestones
         if self.chain_state["streak"] % 10 == 0:
             await message.channel.send(
@@ -443,34 +642,43 @@ class Games(commands.Cog):
                 f"The next country must start with **{country_input[-1].upper()}**."
             )
 
-        # Bot's Turn!
-        last_letter = country_input[-1]
-        possible_countries = [c for c in COUNTRIES if c.startswith(last_letter) and c not in self.chain_state["used_countries"]]
-        
-        if possible_countries:
-            async with message.channel.typing():
-                await asyncio.sleep(1.5)
-                bot_choice = random.choice(possible_countries)
-                
-                self.chain_state["last_country"] = bot_choice
-                self.chain_state["last_user_id"] = self.bot.user.id
-                self.chain_state["used_countries"].add(bot_choice)
-                self.chain_state["streak"] += 1
-                
-                bot_msg = await message.channel.send(f"🤖 **Dion:** `{bot_choice.title()}`")
-                await bot_msg.add_reaction("✅")
-                
-                # Update last played time for the user's turn
-                self.chain_state["last_played_time"] = time.time()
-                
-                if self.chain_state["streak"] % 10 == 0:
-                    await message.channel.send(
-                        f"🔥 **Incredible!** The server is on a **{self.chain_state['streak']} country streak!** "
-                        f"The next country must start with **{bot_choice[-1].upper()}**."
-                    )
+        # Handle turns based on mode
+        if self.chain_mode == "bot":
+            # Bot's Turn!
+            last_letter = country_input[-1]
+            possible_countries = [c for c in COUNTRIES if c.startswith(last_letter) and c not in self.chain_state["used_countries"]]
+            
+            if possible_countries:
+                async with message.channel.typing():
+                    await asyncio.sleep(1.5)
+                    bot_choice = random.choice(possible_countries)
+                    bot_flag = get_flag_emoji(bot_choice)
+                    
+                    self.chain_state["last_country"] = bot_choice
+                    self.chain_state["last_user_id"] = self.bot.user.id
+                    self.chain_state["used_countries"].add(bot_choice)
+                    self.chain_state["streak"] += 1
+                    
+                    bot_msg = await message.channel.send(f"🤖 **Dion:** `{bot_choice.title()}` {bot_flag} (Streak: **{self.chain_state['streak']}**)")
+                    await bot_msg.add_reaction("✅")
+                    
+                    # Update last played message and reset time
+                    self.chain_state["last_message_id"] = bot_msg.id
+                    self.chain_state["last_played_time"] = time.time()
+                    
+                    if self.chain_state["streak"] % 10 == 0:
+                        await message.channel.send(
+                            f"🔥 **Incredible!** The server is on a **{self.chain_state['streak']} country streak!** "
+                            f"The next country must start with **{bot_choice[-1].upper()}**."
+                        )
+            else:
+                await message.channel.send(f"🏳️ **I cannot find any unused country starting with {last_letter.upper()}! You win!** Streak: **{self.chain_state['streak']}**")
+                self.reset_chain()
+                await self.send_rules_msg(message.channel)
         else:
-            await message.channel.send(f"🏳️ **I cannot find any unused country starting with {last_letter.upper()}! You win!** Streak: **{self.chain_state['streak']}**")
-            self.reset_chain()
+            # User vs User Mode: just update message id so the next user replies to the current message
+            self.chain_state["last_message_id"] = message.id
+            self.chain_state["last_played_time"] = time.time()
 
 async def setup(bot):
     await bot.add_cog(Games(bot))
