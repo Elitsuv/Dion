@@ -1,34 +1,19 @@
 import discord
 from discord.ext import commands
 from discord import app_commands
-import re
-import random
 import numpy as np
 
 class NLP(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @app_commands.command(name='nlp_predict', description="Predicts World Cup matches using natural language.")
-    @app_commands.describe(query="E.g., Predict who will win between Brazil and Germany")
-    async def nlp_predict(self, interaction: discord.Interaction, query: str):
-        """Extracts teams from a natural language query and predicts the winner."""
-        # Simple NLP entity extraction using Regex for common query formats
-        # Matches formats like: "between TeamA and TeamB", "TeamA vs TeamB"
-        pattern = r"(?:between|match|vs\.?|predict)[\s]+([A-Z][a-zA-Z\s]+?)[\s]+(?:and|vs\.?)[\s]+([A-Z][a-zA-Z\s]+)"
+    @app_commands.command(name='fwc_predict', description="Predicts Football World Cup matches.")
+    @app_commands.describe(team_a="First team name", team_b="Second team name")
+    async def fwc_predict(self, interaction: discord.Interaction, team_a: str, team_b: str):
+        """Predicts the winner between two teams."""
         
-        match = re.search(pattern, query, re.IGNORECASE)
-        
-        if not match:
-            # Fallback if the pattern doesn't match
-            await interaction.response.send_message(
-                "❌ **NLP Parsing Failed:** I couldn't understand the teams in your query. Try something like: `Predict the match between Argentina and France`",
-                ephemeral=True
-            )
-            return
-            
-        team_a = match.group(1).strip().title()
-        team_b = match.group(2).strip().title()
+        team_a = team_a.strip().title()
+        team_b = team_b.strip().title()
 
         # Simulate "Engine" prediction logic by creating a pseudo-ACS based on team name hashes
         # This provides a deterministic "prediction" for any given matchup
@@ -57,11 +42,10 @@ class NLP(commands.Cog):
             prediction_text = f"⚖️ It's a dead heat between {team_a} and {team_b}!"
 
         embed = discord.Embed(
-            title="🌐 NLP World Cup Prediction Engine",
-            description=f"Query parsed: `{query}`",
+            title="🌐 FWC Prediction Engine",
+            description=f"Matchup: **{team_a} vs {team_b}**",
             color=0xFFB347
         )
-        embed.add_field(name="Entities Extracted", value=f"Team 1: **{team_a}**\nTeam 2: **{team_b}**", inline=False)
         embed.add_field(name="Prediction", value=prediction_text, inline=False)
         embed.add_field(
             name="Win Probabilities", 
