@@ -37,7 +37,10 @@ class Engine(commands.Cog):
 
         user_id = str(message.author.id)
         if user_id not in self.users:
-            self.users[user_id] = {"xp": 0, "level": 1, "last_message": 0}
+            self.users[user_id] = {"xp": 0, "level": 1, "coins": 0, "last_message": 0}
+
+        if "coins" not in self.users[user_id]:
+            self.users[user_id]["coins"] = 0
 
         current_time = time.time()
         # 60 seconds cooldown for XP
@@ -60,24 +63,26 @@ class Engine(commands.Cog):
 
             save_data(self.users)
 
-    @app_commands.command(name='profile', description="Shows your level and XP.")
+    @app_commands.command(name='profile', description="Shows your level, XP, and coins.")
     async def profile(self, interaction: discord.Interaction, member: discord.Member = None):
-        """Shows the user's level, XP, and progress."""
+        """Shows the user's level, XP, coins, and progress."""
         target = member or interaction.user
         if target.bot:
             await interaction.response.send_message("Bots do not have profiles.", ephemeral=True)
             return
 
         user_id = str(target.id)
-        user_data = self.users.get(user_id, {"xp": 0, "level": 1})
+        user_data = self.users.get(user_id, {"xp": 0, "level": 1, "coins": 0})
         
-        current_level = user_data["level"]
-        current_xp = user_data["xp"]
+        current_level = user_data.get("level", 1)
+        current_xp = user_data.get("xp", 0)
+        coins = user_data.get("coins", 0)
         xp_needed = self.get_xp_for_level(current_level)
 
         embed = discord.Embed(title=f"👤 {target.display_name}'s Profile", color=0xFFB347)
         embed.set_thumbnail(url=target.display_avatar.url if target.display_avatar else target.default_avatar.url)
         embed.add_field(name="Level", value=f"`{current_level}`", inline=True)
+        embed.add_field(name="Coins", value=f"🪙 `{coins}`", inline=True)
         embed.add_field(name="XP", value=f"`{current_xp} / {xp_needed}`", inline=True)
 
         progress = int((current_xp / xp_needed) * 10) if xp_needed > 0 else 0
