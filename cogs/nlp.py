@@ -7,9 +7,9 @@ class NLP(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @app_commands.command(name='fwc_predict', description="Predicts Football World Cup matches.")
+    @app_commands.command(name='fifa_predict', description="Predicts FIFA match outcomes using Dion Corp AI.")
     @app_commands.describe(team_a="First team name", team_b="Second team name")
-    async def fwc_predict(self, interaction: discord.Interaction, team_a: str, team_b: str):
+    async def fifa_predict(self, interaction: discord.Interaction, team_a: str, team_b: str):
         """Predicts the winner between two teams."""
         
         team_a = team_a.strip().title()
@@ -42,9 +42,9 @@ class NLP(commands.Cog):
             prediction_text = f"⚖️ It's a dead heat between {team_a} and {team_b}!"
 
         embed = discord.Embed(
-            title="🌐 FWC Prediction Engine",
-            description=f"Matchup: **{team_a} vs {team_b}**",
-            color=0xFFB347
+            title="🌐 Dion Corp | FIFA Prediction Engine",
+            description=f"Matchup Analysis: **{team_a} vs {team_b}**",
+            color=0x005A9C # Corporate Blue
         )
         embed.add_field(name="Prediction", value=prediction_text, inline=False)
         embed.add_field(

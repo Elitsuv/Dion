@@ -79,7 +79,7 @@ class Engine(commands.Cog):
         coins = user_data.get("coins", 0)
         xp_needed = self.get_xp_for_level(current_level)
 
-        embed = discord.Embed(title=f"👤 {target.display_name}'s Profile", color=0xFFB347)
+        embed = discord.Embed(title=f"👤 Dion Corp Employee: {target.display_name}", color=0x005A9C)
         embed.set_thumbnail(url=target.display_avatar.url if target.display_avatar else target.default_avatar.url)
         embed.add_field(name="Level", value=f"`{current_level}`", inline=True)
         embed.add_field(name="Coins", value=f"🪙 `{coins}`", inline=True)
@@ -107,8 +107,8 @@ class Engine(commands.Cog):
         det = np.linalg.det(matrix_np)
         
         embed = discord.Embed(
-            title="📊 Linear Algebra Engine",
-            color=0xFFB347
+            title="📊 Dion Corp | Linear Algebra Engine",
+            color=0x005A9C
         )
         embed.add_field(name="Input Matrix", value=f"```\n{matrix_np}\n```", inline=False)
         embed.add_field(name=r"Determinant ($\Delta$)", value=f"`{round(det, 4)}`", inline=False)

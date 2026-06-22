@@ -6,30 +6,39 @@ class Help(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @app_commands.command(name='help', description="Shows all available commands for the bot.")
+    @app_commands.command(name='help', description="Displays the Dion Corp internal command directory.")
     async def help_command(self, interaction: discord.Interaction):
-        """Displays an all-in-one help menu."""
+        """Displays a dynamic, all-in-one help menu."""
         embed = discord.Embed(
-            title="Dion Bot - Help Menu",
-            description="Here are all the available commands you can use:",
-            color=0xFFB347 # Light Orange theme
+            title="🏢 Dion Corp | Central Command Directory",
+            description="Welcome to the Dion Corp bot terminal. Below is the list of authorized operations:",
+            color=0x005A9C # Corporate Blue theme
         )
         
-        # General / User Commands
+        # We can dynamically pull commands from the bot's tree if we want, 
+        # but for clean categorization, we define them manually here.
+        # This prevents internal/owner-only commands from leaking to regular users.
+        
         embed.add_field(
-            name="🎮 Fun & Predictions", 
-            value="`/guess` - Play a 3x3 emoji guessing game!\n`/nlp_predict <query>` - Use NLP to predict World Cup match outcomes.\n`/predict <team_acs> <enemy_acs>` - Predict win probability based on stats.\n`/matrix <size> <elements>` - Calculate the determinant of a matrix.",
+            name="🎮 Entertainment & AI", 
+            value="`/tictactoe <opponent>` - Play Tic-Tac-Toe.\n`/set_country_chain <channel> <mode>` - Setup word chain.\n`/fifa_predict <team_a> <team_b>` - AI FIFA match prediction.\n`/matrix <size> <elements>` - Linear algebra determinant engine.\n`/profile [user]` - View Dion Corp employee profile & level.",
             inline=False
         )
         
-        # Admin Commands
         embed.add_field(
-            name="🛡️ Admin Commands", 
-            value="`/clear <amount>` - Delete a set number of messages.\n`/lock` - Locks the current channel.\n`/unlock` - Unlocks the current channel.\n`/alert <message>` - Broadcast a system announcement.",
+            name="🎫 User Engagement",
+            value="`/giveaway <prize> <duration> [winners]` - Start a server giveaway.\n`/setup_tickets` - Initialize the ticket support portal.",
             inline=False
         )
         
-        embed.set_footer(text="Requested by " + interaction.user.display_name, icon_url=interaction.user.display_avatar.url)
+        embed.add_field(
+            name="🛡️ Administration & Security", 
+            value="`/clear <amount>` - Bulk delete messages.\n`/lock` / `/unlock` - Control channel text operations.\n`/timeout <user> <duration> [reason]` - Suspend employee chat access.\n`/kick <user>` / `/ban <user>` - Terminate employee access.\n`/alert <message>` - Broadcast system-wide alert.\n`/changelog <version> <changes>` - Post formatted release notes.",
+            inline=False
+        )
+        
+        embed.set_thumbnail(url=self.bot.user.display_avatar.url)
+        embed.set_footer(text=f"Authorized Request by: {interaction.user.display_name} | Dion Corp IT Division", icon_url=interaction.user.display_avatar.url)
         await interaction.response.send_message(embed=embed)
 
 async def setup(bot):

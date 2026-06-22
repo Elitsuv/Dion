@@ -445,7 +445,7 @@ class Games(commands.Cog):
                 "🪙 **+15 Coins** added to your profile per correct guess!\n"
                 "🔥 Milestone announcements every 10 streaks!"
             ),
-            color=0xFFB347
+            color=0x005A9C
         )
         msg = await channel.send(embed=embed)
         self.chain_state["last_message_id"] = msg.id

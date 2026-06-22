@@ -10,7 +10,7 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 
 # Configure intents
 intents = discord.Intents.default()
-# Privileged intents removed since Slash Commands don't require them.
+intents.members = True  # Required for welcome message events
 
 
 class DiscordBot(commands.Bot):
@@ -42,8 +42,8 @@ class DiscordBot(commands.Bot):
         # Set a professional presence status
         await self.change_presence(
             activity=discord.Activity(
-                type=discord.ActivityType.competing, 
-                name="VCT // World Cup"
+                type=discord.ActivityType.playing, 
+                name="Dion Corp | v1.0.3"
             )
         )
 

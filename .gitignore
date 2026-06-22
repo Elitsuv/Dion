@@ -17,3 +17,6 @@ __pycache__/
 .idea/
 *.swp
 *.swo
+
+# Data & Configs (User Privacy)
+*.json
