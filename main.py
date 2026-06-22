@@ -10,7 +10,7 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 
 # Configure intents
 intents = discord.Intents.default()
-intents.members = True  # Required for welcome message events
+# intents.members = True  # Disabled due to missing privileged intent
 
 
 class DiscordBot(commands.Bot):

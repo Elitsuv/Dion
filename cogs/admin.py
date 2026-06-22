@@ -299,36 +299,7 @@ class Admin(commands.Cog):
         await asyncio.sleep(5)
         await interaction.channel.delete(reason=f"Ticket closed by {interaction.user.name} via command")
 
-    # -------------------
-    # EVENTS
-    # -------------------
-    @commands.Cog.listener()
-    async def on_member_join(self, member: discord.Member):
-        channel = member.guild.system_channel
-        if not channel:
-            for c in member.guild.text_channels:
-                if c.permissions_for(member.guild.me).send_messages and "welcome" in c.name.lower():
-                    channel = c
-                    break
-            if not channel:
-                for c in member.guild.text_channels:
-                    if c.permissions_for(member.guild.me).send_messages:
-                        channel = c
-                        break
 
-        if channel:
-            embed = discord.Embed(
-                title="🏢 Welcome to the Server | Dion Corp",
-                description=f"Welcome, {member.mention}, to **{member.guild.name}**.\n\nWe are pleased to have you join our community. Please ensure you review the corporate guidelines and familiarize yourself with the available channels.",
-                color=0x005A9C
-            )
-            embed.set_thumbnail(url=member.display_avatar.url)
-            embed.set_footer(text=f"Employee #{member.guild.member_count} | Dion Corp Human Resources")
-            
-            try:
-                await channel.send(embed=embed)
-            except discord.Forbidden:
-                pass
 
     # -------------------
     # ERROR HANDLING
