@@ -20,14 +20,14 @@ class Help(commands.Cog):
         # This prevents internal/owner-only commands from leaking to regular users.
         
         embed.add_field(
-            name="🎮 Entertainment & AI", 
-            value="`/tictactoe <opponent>` - Play Tic-Tac-Toe.\n`/set_country_chain <channel> <mode>` - Setup word chain.\n`/fifa_predict <team_a> <team_b>` - AI FIFA match prediction.\n`/matrix <size> <elements>` - Linear algebra determinant engine.\n`/profile [user]` - View Dion Corp employee profile & level.",
+            name="🤖 Entertainment & AI", 
+            value="`/tictactoe <opponent>` - Play Tic-Tac-Toe.\n`/set_country_chain <channel> <mode>` - Setup word chain.\n`/profile [user]` - View Dion Corp employee profile & level.\n*Tip: Start your message with `Dion` or mention me to chat with my Jax-powered Neural Engine!*",
             inline=False
         )
         
         embed.add_field(
-            name="🎫 User Engagement",
-            value="`/giveaway <prize> <duration> [winners]` - Start a server giveaway.\n`/setup_tickets` - Initialize the ticket support portal.",
+            name="🎫 User Engagement & Voice",
+            value="`/giveaway <prize> <duration> [winners]` - Start a server giveaway.\n`/setup_tickets` - Initialize the ticket support portal.\n`/setup_voice` - Setup Dynamic 'Join to Create' voice hubs.",
             inline=False
         )
         

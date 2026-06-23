@@ -21,7 +21,7 @@ class DiscordBot(commands.Bot):
         """Dynamically loads all modules inside the cogs folder."""
         print("🔗 Initializing extensions...")
         # Explicitly loading cogs to avoid file system race conditions
-        extensions = ['cogs.admin', 'cogs.engine', 'cogs.games', 'cogs.nlp', 'cogs.help']
+        extensions = ['cogs.admin', 'cogs.engine', 'cogs.games', 'cogs.chatbot', 'cogs.utility', 'cogs.help']
         for ext in extensions:
             try:
                 await self.load_extension(ext)

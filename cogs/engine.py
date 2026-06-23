@@ -1,15 +1,15 @@
 import discord
 from discord.ext import commands
 from discord import app_commands
-import numpy as np
 import json
 import os
 import time
 import random
+import asyncio
 
 DATA_FILE = "users.json"
 
-def load_data():
+def sync_load_data():
     if not os.path.exists(DATA_FILE):
         return {}
     with open(DATA_FILE, "r") as f:
@@ -18,14 +18,17 @@ def load_data():
         except json.JSONDecodeError:
             return {}
 
-def save_data(data):
+def sync_save_data(data):
     with open(DATA_FILE, "w") as f:
         json.dump(data, f, indent=4)
+
+async def save_data(data):
+    await asyncio.to_thread(sync_save_data, data)
 
 class Engine(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.users = load_data()
+        self.users = sync_load_data()
 
     def get_xp_for_level(self, level):
         return int(100 * (level ** 1.5))
@@ -61,7 +64,8 @@ class Engine(commands.Cog):
                 except discord.HTTPException:
                     pass
 
-            save_data(self.users)
+            # Save data asynchronously
+            await save_data(self.users)
 
     @app_commands.command(name='profile', description="Shows your level, XP, and coins.")
     async def profile(self, interaction: discord.Interaction, member: discord.Member = None):
@@ -91,34 +95,7 @@ class Engine(commands.Cog):
 
         await interaction.response.send_message(embed=embed)
 
-    @app_commands.command(name='matrix', description="Computes the determinant of a square matrix. Provide elements as space-separated numbers.")
-    async def matrix(self, interaction: discord.Interaction, rows_cols: int, elements: str):
-        """Computes the determinant of a square matrix."""
-        try:
-            element_list = [float(e) for e in elements.split()]
-        except ValueError:
-            return await interaction.response.send_message("❌ Error: Please provide valid numbers for elements, separated by spaces.", ephemeral=True)
 
-        if len(element_list) != rows_cols ** 2:
-            await interaction.response.send_message(f"❌ Error: Expected {rows_cols**2} elements for a {rows_cols}x{rows_cols} matrix, got {len(element_list)}.", ephemeral=True)
-            return
-
-        matrix_np = np.array(element_list).reshape(rows_cols, rows_cols)
-        det = np.linalg.det(matrix_np)
-        
-        embed = discord.Embed(
-            title="📊 Dion Corp | Linear Algebra Engine",
-            color=0x005A9C
-        )
-        embed.add_field(name="Input Matrix", value=f"```\n{matrix_np}\n```", inline=False)
-        embed.add_field(name=r"Determinant ($\Delta$)", value=f"`{round(det, 4)}`", inline=False)
-        
-        if abs(det) > 1e-9:
-            embed.add_field(name="Status", value="System is non-singular. A unique solution exists.", inline=False)
-        else:
-            embed.add_field(name="Status", value="Matrix is singular (infinite or no solutions).", inline=False)
-
-        await interaction.response.send_message(embed=embed)
 
 async def setup(bot):
     await bot.add_cog(Engine(bot))
