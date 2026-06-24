@@ -1,5 +1,7 @@
 # 🏢 Dion Discord Bot
-![Dion](assets/dion.png)
+<p align="left">
+  <img src="assets/dion.png" alt="Dion" width="10%">
+</p>
 
 Dion is a feature-rich Discord bot designed to elevate server administration, facilitate active community engagement, manage support tickets, and provide interactive progression and game systems.
 
