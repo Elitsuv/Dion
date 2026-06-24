@@ -1,26 +1,36 @@
+"""
+Main entry point for the Dion Discord Bot.
+Handles bot initialization, configuration, and startup.
+"""
+
 import os
 import asyncio
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 
-# Load environment variables
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 
-# Configure intents
 intents = discord.Intents.default()
 # intents.members = True  # Disabled due to missing privileged intent
 
-
 class DiscordBot(commands.Bot):
+    """
+    The main bot class inheriting from commands.Bot.
+    Responsible for setting up extensions and syncing the command tree.
+    """
+    
     def __init__(self):
         super().__init__(command_prefix='!', intents=intents, help_command=None)
 
     async def setup_hook(self):
-        """Dynamically loads all modules inside the cogs folder."""
+        """
+        Dynamically loads all modules inside the cogs folder.
+        Extensions are loaded explicitly to avoid file system race conditions.
+        After loading extensions, the slash command tree is synced globally.
+        """
         print("🔗 Initializing extensions...")
-        # Explicitly loading cogs to avoid file system race conditions
         extensions = ['cogs.engine', 'cogs.games', 'cogs.utility', 'cogs.help']
         for ext in extensions:
             try:
@@ -37,9 +47,9 @@ class DiscordBot(commands.Bot):
             print(f"❌ Failed to sync command tree: {e}")
 
     async def on_ready(self):
+        """Called when the bot is fully ready and connected to Discord."""
         print(f'🚀 System online. Logged in as: {self.user}')
         print(f'📡 Connected to local machine node.')
-        # Set a professional presence status
         await self.change_presence(
             activity=discord.Activity(
                 type=discord.ActivityType.playing, 

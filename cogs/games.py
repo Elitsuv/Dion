@@ -116,7 +116,6 @@ class TicTacToeButton(discord.ui.Button['TicTacToeView']):
             await interaction.response.send_message("It's not your turn!", ephemeral=True)
             return
 
-        # Valid move
         if view.current_player == view.X:
             self.style = discord.ButtonStyle.danger
             self.label = 'X'
@@ -143,7 +142,7 @@ class TicTacToeButton(discord.ui.Button['TicTacToeView']):
                     uid = str(view.player1.id)
                     engine_cog.users.setdefault(uid, {"xp": 0, "level": 1, "coins": 0})
                     engine_cog.users[uid]["coins"] = engine_cog.users[uid].get("coins", 0) + 50
-                    save_data(engine_cog.users)
+                    await save_data(engine_cog.users)
             elif winner == view.O:
                 if view.player2.bot:
                     content = f"🏆 **{view.player2.mention} (Bot) won against {view.player1.mention}!**"
@@ -153,7 +152,7 @@ class TicTacToeButton(discord.ui.Button['TicTacToeView']):
                         uid = str(view.player2.id)
                         engine_cog.users.setdefault(uid, {"xp": 0, "level": 1, "coins": 0})
                         engine_cog.users[uid]["coins"] = engine_cog.users[uid].get("coins", 0) + 50
-                        save_data(engine_cog.users)
+                        await save_data(engine_cog.users)
             else:
                 content = f"🤝 **It's a tie between {view.player1.mention} and {view.player2.mention}!**\n🪙 **+5 Coins** added to each profile!"
                 if engine_cog:
@@ -162,7 +161,7 @@ class TicTacToeButton(discord.ui.Button['TicTacToeView']):
                             pid = str(player.id)
                             engine_cog.users.setdefault(pid, {"xp": 0, "level": 1, "coins": 0})
                             engine_cog.users[pid]["coins"] = engine_cog.users[pid].get("coins", 0) + 5
-                    save_data(engine_cog.users)
+                    await save_data(engine_cog.users)
 
             for child in view.children:
                 child.disabled = True
@@ -171,7 +170,6 @@ class TicTacToeButton(discord.ui.Button['TicTacToeView']):
             await interaction.response.edit_message(content=content, view=view)
             return
 
-        # Handle Bot opponent's turn if applicable
         if view.player2.bot and view.current_player == view.O:
             await interaction.response.edit_message(
                 content=f"🎮 **Tic-Tac-Toe**\n{view.player1.mention} vs {view.player2.mention}\n\n🧠 *Dion Engine predicting best move...*",
@@ -206,7 +204,7 @@ class TicTacToeButton(discord.ui.Button['TicTacToeView']):
                             uid = str(view.player1.id)
                             engine_cog.users.setdefault(uid, {"xp": 0, "level": 1, "coins": 0})
                             engine_cog.users[uid]["coins"] = engine_cog.users[uid].get("coins", 0) + 50
-                            save_data(engine_cog.users)
+                            await save_data(engine_cog.users)
                     elif winner == view.O:
                         content = f"🏆 **{view.player2.mention} (Bot) won against {view.player1.mention}!**"
                     else:
@@ -215,7 +213,7 @@ class TicTacToeButton(discord.ui.Button['TicTacToeView']):
                             uid = str(view.player1.id)
                             engine_cog.users.setdefault(uid, {"xp": 0, "level": 1, "coins": 0})
                             engine_cog.users[uid]["coins"] = engine_cog.users[uid].get("coins", 0) + 5
-                            save_data(engine_cog.users)
+                            await save_data(engine_cog.users)
 
                     for child in view.children:
                         child.disabled = True
@@ -364,21 +362,18 @@ class StreakSaveView(discord.ui.View):
             await interaction.response.send_message("❌ You do not have enough coins! (Requires 50 🪙)", ephemeral=True)
             return
 
-        # Deduct coins from user
         engine_cog.users[user_id]["coins"] = user_coins - 50
-        # Add to Dion Bank
         engine_cog.users.setdefault("dion_bank", {"coins": 0})
         engine_cog.users["dion_bank"]["coins"] = engine_cog.users["dion_bank"].get("coins", 0) + 50
         
         from cogs.engine import save_data
-        save_data(engine_cog.users)
+        await save_data(engine_cog.users)
 
         self.saved = True
         self.stop()
         button.disabled = True
         await interaction.response.edit_message(content="🛡️ **Streak has been saved!**", view=self)
 
-        # Restore games cog state
         self.games_cog.chain_state = {
             "last_country": self.previous_last_country,
             "last_user_id": self.previous_last_user_id,
@@ -535,19 +530,15 @@ class Games(commands.Cog):
         if self.chain_channel_id is None or message.channel.id != self.chain_channel_id:
             return
 
-        # Skip slash commands running in the channel
         if message.content.startswith("/"):
             return
 
-        # Make sure user replies to the previous response in the game chain
         if self.chain_state["last_message_id"] > 0:
             if not message.reference or message.reference.message_id != self.chain_state["last_message_id"]:
-                return  # DO NOT respond or reset if it is just a normal text chat message!
+                return
 
-        # Normalize input: remove punctuation/emojis, lowercase, strip
         country_input = re.sub(r'[^\w\s-]', '', message.content).strip().lower()
 
-        # 1. Anti-Google timer check (15s limit)
         current_time = time.time()
         if self.chain_state["last_country"] and self.chain_state["last_played_time"] > 0:
             elapsed = current_time - self.chain_state["last_played_time"]
@@ -559,7 +550,6 @@ class Games(commands.Cog):
                 )
                 return
 
-        # 2. Check double posting
         if self.chain_state["last_user_id"] == message.author.id:
             await message.add_reaction("❌")
             await message.channel.send(
@@ -568,7 +558,6 @@ class Games(commands.Cog):
             )
             return
 
-        # 3. Check if it's a valid country
         if country_input not in COUNTRIES:
             await message.add_reaction("❌")
             await self.trigger_streak_save_challenge(
@@ -577,7 +566,6 @@ class Games(commands.Cog):
             )
             return
 
-        # 4. Check starting letter match
         if self.chain_state["last_country"]:
             last_char = self.chain_state["last_country"][-1]
             if country_input[0] != last_char:
@@ -588,7 +576,6 @@ class Games(commands.Cog):
                 )
                 return
 
-        # 5. Check if it was already used
         if country_input in self.chain_state["used_countries"]:
             await message.add_reaction("❌")
             await self.trigger_streak_save_challenge(
@@ -597,7 +584,6 @@ class Games(commands.Cog):
             )
             return
 
-        # Valid Country! Update state
         flag = get_flag_emoji(country_input)
         self.chain_state["last_country"] = country_input
         self.chain_state["last_user_id"] = message.author.id
@@ -608,7 +594,6 @@ class Games(commands.Cog):
 
         await message.add_reaction("✅")
 
-        # Award Coins and XP via Engine cog
         engine_cog = self.bot.get_cog('Engine')
         xp_awarded = 10
         coins_awarded = 15
@@ -619,7 +604,6 @@ class Games(commands.Cog):
             engine_cog.users[user_id]["coins"] = engine_cog.users[user_id].get("coins", 0) + coins_awarded
             engine_cog.users[user_id]["xp"] += xp_awarded
             
-            # Check level up
             current_level = engine_cog.users[user_id]["level"]
             xp_needed = engine_cog.get_xp_for_level(current_level)
             if engine_cog.users[user_id]["xp"] >= xp_needed:
@@ -630,21 +614,17 @@ class Games(commands.Cog):
                 except:
                     pass
             from cogs.engine import save_data
-            save_data(engine_cog.users)
+            await save_data(engine_cog.users)
 
-        # Notify correct play & coin reward
         coin_txt = await message.channel.send(f"🪙 **+15 Coins** added to {message.author.mention}'s vault! (Streak: **{self.chain_state['streak']}**)")
         
-        # Notify milestones
         if self.chain_state["streak"] % 10 == 0:
             await message.channel.send(
                 f"🔥 **Incredible!** The server is on a **{self.chain_state['streak']} country streak!** "
                 f"The next country must start with **{country_input[-1].upper()}**."
             )
 
-        # Handle turns based on mode
         if self.chain_mode == "bot":
-            # Bot's Turn!
             last_letter = country_input[-1]
             possible_countries = [c for c in COUNTRIES if c.startswith(last_letter) and c not in self.chain_state["used_countries"]]
             
@@ -662,7 +642,6 @@ class Games(commands.Cog):
                     bot_msg = await message.channel.send(f"🤖 **Dion:** `{bot_choice.title()}` {bot_flag} (Streak: **{self.chain_state['streak']}**)")
                     await bot_msg.add_reaction("✅")
                     
-                    # Update last played message and reset time
                     self.chain_state["last_message_id"] = bot_msg.id
                     self.chain_state["last_played_time"] = time.time()
                     
@@ -676,7 +655,6 @@ class Games(commands.Cog):
                 self.reset_chain()
                 await self.send_rules_msg(message.channel)
         else:
-            # User vs User Mode: just update message id so the next user replies to the current message
             self.chain_state["last_message_id"] = message.id
             self.chain_state["last_played_time"] = time.time()
 

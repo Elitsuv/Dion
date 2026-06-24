@@ -65,15 +65,15 @@ class TicketCreateButton(discord.ui.View):
 
 
 class Utility(commands.Cog):
-    """General utility, moderation, and support commands for Dion Corp."""
+    """
+    General utility, moderation, and support commands for Dion Corp.
+    Manages temporary private voice channels, support tickets, and moderation.
+    """
+    
     def __init__(self, bot):
         self.bot = bot
-        # Dictionary to track temporary private voice channels created
         self.temp_channels = {}
 
-    # -------------------
-    # VOICE HUB SYSTEM
-    # -------------------
     @app_commands.command(name='setup_voice', description="Sets up the dynamic 'Join to Create' voice category and channel.")
     @app_commands.default_permissions(administrator=True)
     async def setup_voice(self, interaction: discord.Interaction):
@@ -97,9 +97,9 @@ class Utility(commands.Cog):
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
+        """Manages dynamic voice channels creation and cleanup."""
         guild = member.guild
         
-        # Join to Create logic
         if after.channel and after.channel.name == "➕ Join to Create":
             category = after.channel.category
             
@@ -113,7 +113,6 @@ class Utility(commands.Cog):
             await member.move_to(new_channel)
             self.temp_channels[new_channel.id] = new_channel
 
-        # Cleanup empty logic
         if before.channel and before.channel.id in self.temp_channels:
             if len(before.channel.members) == 0:
                 try:
@@ -124,9 +123,6 @@ class Utility(commands.Cog):
                 except Exception as e:
                     print(f"Failed to delete temp voice channel: {e}")
 
-    # -------------------
-    # LFG SYSTEM
-    # -------------------
     @app_commands.command(name='lfg', description="Looking For Group - Tag a squad role to announce you're looking for gamers.")
     @app_commands.describe(
         game="The game you want to play.",
@@ -144,13 +140,8 @@ class Utility(commands.Cog):
         )
         embed.set_footer(text="Join them in a voice channel!")
         
-        # Note: Depending on server settings, users might not be able to ping @here or certain roles.
-        # It's a best practice to send the ping outside the embed.
         await interaction.response.send_message(f"Hey {role_mention}, who's down?", embed=embed)
 
-    # -------------------
-    # TICKET SYSTEM
-    # -------------------
     @app_commands.command(name='setup_tickets', description="Sets up the ticket creation panel in the current channel.")
     @app_commands.default_permissions(administrator=True)
     async def setup_tickets(self, interaction: discord.Interaction):
@@ -176,9 +167,6 @@ class Utility(commands.Cog):
         await asyncio.sleep(5)
         await interaction.channel.delete(reason=f"Ticket closed by {interaction.user.name} via command")
 
-    # -------------------
-    # MODERATION COMMANDS
-    # -------------------
     @app_commands.command(name='clear', description="Deletes a specified number of messages from the channel.")
     @app_commands.default_permissions(manage_messages=True)
     async def clear(self, interaction: discord.Interaction, amount: int = 5):
@@ -293,9 +281,6 @@ class Utility(commands.Cog):
         except discord.Forbidden:
             await interaction.response.send_message("❌ Error: I do not have permission to ban this user.", ephemeral=True)
 
-    # -------------------
-    # ROLE MANAGEMENT
-    # -------------------
     @app_commands.command(name='add_role', description="Assign a role to a user.")
     @app_commands.default_permissions(manage_roles=True)
     async def add_role(self, interaction: discord.Interaction, member: discord.Member, role: discord.Role):
@@ -320,9 +305,6 @@ class Utility(commands.Cog):
         except Exception as e:
             await interaction.response.send_message(f"❌ An error occurred: {e}", ephemeral=True)
 
-    # -------------------
-    # LEVEL / XP MANAGEMENT
-    # -------------------
     @app_commands.command(name='add_level', description="Manually increase a user's level.")
     @app_commands.default_permissions(administrator=True)
     async def add_level(self, interaction: discord.Interaction, member: discord.Member, amount: int = 1):
@@ -363,7 +345,6 @@ class Utility(commands.Cog):
         engine_cog.users.setdefault(uid, {"xp": 0, "level": 1, "coins": 0, "last_message": 0})
         engine_cog.users[uid]["xp"] += amount
         
-        # Check level up
         current_level = engine_cog.users[uid]["level"]
         xp_needed = engine_cog.get_xp_for_level(current_level)
         if engine_cog.users[uid]["xp"] >= xp_needed:
@@ -387,10 +368,6 @@ class Utility(commands.Cog):
         engine_cog.users[uid]["xp"] = max(0, engine_cog.users[uid]["xp"] - amount)
         await interaction.response.send_message(f"✅ Removed {amount} XP from {member.mention}.", ephemeral=True)
 
-
-    # -------------------
-    # GIVEAWAY COMMANDS
-    # -------------------
     @app_commands.command(name='giveaway', description="Starts a giveaway in the current channel.")
     @app_commands.default_permissions(manage_events=True)
     @app_commands.describe(
@@ -446,9 +423,6 @@ class Utility(commands.Cog):
 
         await interaction.channel.send(f"🎉 Congratulations {winner_mentions}! You won **{prize}**!")
 
-    # -------------------
-    # ERROR HANDLING
-    # -------------------
     def cog_app_command_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
         if isinstance(error, app_commands.MissingPermissions):
             return interaction.response.send_message("🛑 **Access Denied.** Your security clearance is insufficient for this command.", ephemeral=True)

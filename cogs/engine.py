@@ -1,3 +1,8 @@
+"""
+Engine module for the Dion Discord Bot.
+Handles economy, user data, leveling, and XP progression.
+"""
+
 import discord
 from discord.ext import commands
 from discord import app_commands
@@ -9,7 +14,8 @@ import asyncio
 
 DATA_FILE = "users.json"
 
-def sync_load_data():
+def sync_load_data() -> dict:
+    """Loads user data from the JSON data file synchronously."""
     if not os.path.exists(DATA_FILE):
         return {}
     with open(DATA_FILE, "r") as f:
@@ -18,23 +24,32 @@ def sync_load_data():
         except json.JSONDecodeError:
             return {}
 
-def sync_save_data(data):
+def sync_save_data(data: dict):
+    """Saves user data to the JSON data file synchronously."""
     with open(DATA_FILE, "w") as f:
         json.dump(data, f, indent=4)
 
-async def save_data(data):
+async def save_data(data: dict):
+    """Saves user data asynchronously to prevent blocking the event loop."""
     await asyncio.to_thread(sync_save_data, data)
 
 class Engine(commands.Cog):
+    """
+    Core engine cog responsible for managing user levels, XP, and coins.
+    Tracks user activity to award experience and handles level-up events.
+    """
+    
     def __init__(self, bot):
         self.bot = bot
         self.users = sync_load_data()
 
-    def get_xp_for_level(self, level):
+    def get_xp_for_level(self, level: int) -> int:
+        """Calculates the required XP to reach the next level."""
         return int(100 * (level ** 1.5))
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
+        """Listens to messages and awards XP based on a cooldown timer."""
         if message.author.bot:
             return
 
@@ -46,13 +61,12 @@ class Engine(commands.Cog):
             self.users[user_id]["coins"] = 0
 
         current_time = time.time()
-        # 60 seconds cooldown for XP
+        
         if current_time - self.users[user_id].get("last_message", 0) > 60:
             xp_gain = random.randint(15, 25)
             self.users[user_id]["xp"] += xp_gain
             self.users[user_id]["last_message"] = current_time
 
-            # Level up check
             current_level = self.users[user_id]["level"]
             xp_needed = self.get_xp_for_level(current_level)
 
@@ -64,7 +78,6 @@ class Engine(commands.Cog):
                 except discord.HTTPException:
                     pass
 
-            # Save data asynchronously
             await save_data(self.users)
 
     @app_commands.command(name='profile', description="Shows your level, XP, and coins.")
@@ -95,7 +108,6 @@ class Engine(commands.Cog):
 
         await interaction.response.send_message(embed=embed)
 
-
-
 async def setup(bot):
+    """Adds the Engine cog to the bot instance."""
     await bot.add_cog(Engine(bot))
