@@ -26,7 +26,7 @@ class TestDionBot(unittest.TestCase):
 
         asyncio.run(run_setup())
         
-        expected_extensions = ['cogs.engine', 'cogs.games', 'cogs.utility', 'cogs.help']
+        expected_extensions = ['cogs.games', 'cogs.utility', 'cogs.moderation', 'cogs.events']
         self.assertEqual(self.bot.load_extension.call_count, len(expected_extensions))
         
         for ext in expected_extensions:

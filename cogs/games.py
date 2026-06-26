@@ -1,3 +1,6 @@
+import sqlite3
+from utils.db import get_connection
+from utils.embeds import DionEmbed
 import discord
 from discord.ext import commands
 from discord import app_commands
@@ -148,20 +151,16 @@ class TicTacToeButton(discord.ui.Button['TicTacToeView']):
                     content = f"🏆 **{view.player2.mention} (Bot) won against {view.player1.mention}!**"
                 else:
                     content = f"🏆 **{view.player2.mention} won against {view.player1.mention}!**\n🪙✨ **+50 Coins** added to profile!"
-                    if engine_cog:
-                        uid = str(view.player2.id)
-                        engine_cog.users.setdefault(uid, {"xp": 0, "level": 1, "coins": 0})
-                        engine_cog.users[uid]["coins"] = engine_cog.users[uid].get("coins", 0) + 50
-                        await save_data(engine_cog.users)
+                    if games_cog:
+                        games_cog.add_coins(view.player2.id, 50)
+                        games_cog.add_xp(view.player2.id, 20)
             else:
                 content = f"🤝 **It's a tie between {view.player1.mention} and {view.player2.mention}!**\n🪙 **+5 Coins** added to each profile!"
-                if engine_cog:
+                if games_cog:
                     for player in (view.player1, view.player2):
                         if not player.bot:
-                            pid = str(player.id)
-                            engine_cog.users.setdefault(pid, {"xp": 0, "level": 1, "coins": 0})
-                            engine_cog.users[pid]["coins"] = engine_cog.users[pid].get("coins", 0) + 5
-                    await save_data(engine_cog.users)
+                            games_cog.add_coins(player.id, 5)
+                            games_cog.add_xp(player.id, 2)
 
             for child in view.children:
                 child.disabled = True
@@ -349,25 +348,13 @@ class StreakSaveView(discord.ui.View):
 
     @discord.ui.button(label="Save Streak (50 🪙)", style=discord.ButtonStyle.primary, emoji="🛡️")
     async def save_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-        engine_cog = self.bot.get_cog('Engine')
-        if not engine_cog:
-            await interaction.response.send_message("❌ Economy system is unavailable.", ephemeral=True)
+        games_cog = self.bot.get_cog('Games')
+        if not games_cog:
+            await interaction.response.send_message('❌ Economy system is unavailable.', ephemeral=True)
             return
-
-        user_id = str(interaction.user.id)
-        user_data = engine_cog.users.get(user_id, {"coins": 0})
-        user_coins = user_data.get("coins", 0)
-
-        if user_coins < 50:
-            await interaction.response.send_message("❌ You do not have enough coins! (Requires 50 🪙)", ephemeral=True)
+        if not games_cog.remove_coins(interaction.user.id, 50):
+            await interaction.response.send_message('❌ You do not have enough coins! (Requires 50 🪙)', ephemeral=True)
             return
-
-        engine_cog.users[user_id]["coins"] = user_coins - 50
-        engine_cog.users.setdefault("dion_bank", {"coins": 0})
-        engine_cog.users["dion_bank"]["coins"] = engine_cog.users["dion_bank"].get("coins", 0) + 50
-        
-        from cogs.engine import save_data
-        await save_data(engine_cog.users)
 
         self.saved = True
         self.stop()
@@ -489,7 +476,7 @@ class Games(commands.Cog):
         )
         view.message = await interaction.original_response()
 
-    @app_commands.command(name='set_country_chain', description="Sets the active channel for the Country Word Chain game.")
+    @app_commands.command(name='atlas', description="Sets the active channel for the Atlas (Country Word Chain) game.")
     @app_commands.describe(
         channel="The channel for playing Country Word Chain",
         mode="Game mode: 'bot' (VS Dion) or 'players' (User vs User)"
@@ -499,7 +486,7 @@ class Games(commands.Cog):
         app_commands.Choice(name="User vs User (Multiplayer)", value="players")
     ])
     @app_commands.default_permissions(manage_channels=True)
-    async def set_country_chain(self, interaction: discord.Interaction, channel: discord.TextChannel, mode: str = "bot"):
+    async def atlas(self, interaction: discord.Interaction, channel: discord.TextChannel, mode: str = "bot"):
         """Sets the active channel for the Country Word Chain game."""
         self.chain_channel_id = channel.id
         self.chain_mode = mode
@@ -509,9 +496,9 @@ class Games(commands.Cog):
         await interaction.response.send_message(f"🌍 Country Chain channel set to {channel.mention} in **{mode}** mode!")
         await self.send_rules_msg(channel)
 
-    @app_commands.command(name='stop_country_chain', description="Stops the Country Word Chain game in this channel.")
+    @app_commands.command(name='atlas_stop', description="Stops the Country Word Chain game in this channel.")
     @app_commands.default_permissions(manage_channels=True)
-    async def stop_country_chain(self, interaction: discord.Interaction):
+    async def atlas_stop(self, interaction: discord.Interaction):
         """Stops the Country Word Chain game in this channel."""
         if self.chain_channel_id is None:
             await interaction.response.send_message("❌ No Country Word Chain game is currently active.", ephemeral=True)
@@ -594,27 +581,10 @@ class Games(commands.Cog):
 
         await message.add_reaction("✅")
 
-        engine_cog = self.bot.get_cog('Engine')
-        xp_awarded = 10
-        coins_awarded = 15
-        if engine_cog:
-            user_id = str(message.author.id)
-            engine_cog.users.setdefault(user_id, {"xp": 0, "level": 1, "coins": 0, "last_message": 0})
-            
-            engine_cog.users[user_id]["coins"] = engine_cog.users[user_id].get("coins", 0) + coins_awarded
-            engine_cog.users[user_id]["xp"] += xp_awarded
-            
-            current_level = engine_cog.users[user_id]["level"]
-            xp_needed = engine_cog.get_xp_for_level(current_level)
-            if engine_cog.users[user_id]["xp"] >= xp_needed:
-                engine_cog.users[user_id]["xp"] -= xp_needed
-                engine_cog.users[user_id]["level"] += 1
-                try:
-                    await message.channel.send(f"🎉 **{message.author.mention}** leveled up to **Level {engine_cog.users[user_id]['level']}**!")
-                except:
-                    pass
-            from cogs.engine import save_data
-            await save_data(engine_cog.users)
+        games_cog = self.bot.get_cog('Games')
+        if games_cog:
+            games_cog.add_coins(message.author.id, 15)
+            games_cog.add_xp(message.author.id, 5)
 
         coin_txt = await message.channel.send(f"🪙 **+15 Coins** added to {message.author.mention}'s vault! (Streak: **{self.chain_state['streak']}**)")
         
@@ -657,6 +627,173 @@ class Games(commands.Cog):
         else:
             self.chain_state["last_message_id"] = message.id
             self.chain_state["last_played_time"] = time.time()
+
+    def get_stats(self, user_id):
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT coins, xp, level FROM economy WHERE user_id = ?", (user_id,))
+        row = cursor.fetchone()
+        conn.close()
+        return row if row else (0, 0, 1)
+
+    def add_xp(self, user_id, amount, channel=None):
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT xp, level FROM economy WHERE user_id = ?", (user_id,))
+        row = cursor.fetchone()
+        current_xp = row[0] if row else 0
+        current_level = row[1] if row else 1
+        
+        new_xp = current_xp + amount
+        xp_needed = current_level * 100
+        
+        leveled_up = False
+        if new_xp >= xp_needed:
+            new_xp -= xp_needed
+            current_level += 1
+            leveled_up = True
+            
+        cursor.execute("UPDATE economy SET xp = ?, level = ? WHERE user_id = ?", (new_xp, current_level, user_id))
+        conn.commit()
+        conn.close()
+        return leveled_up, current_level
+
+    def get_balance(self, user_id):
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT coins FROM economy WHERE user_id = ?", (user_id,))
+        row = cursor.fetchone()
+        conn.close()
+        return row[0] if row else 0
+
+    def add_coins(self, user_id, amount):
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO economy (user_id, coins) VALUES (?, ?) ON CONFLICT(user_id) DO UPDATE SET coins = coins + ?", (user_id, amount, amount))
+        conn.commit()
+        conn.close()
+
+    def remove_coins(self, user_id, amount):
+        current = self.get_balance(user_id)
+        if current < amount:
+            return False
+            
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("UPDATE economy SET coins = coins - ? WHERE user_id = ?", (amount, user_id))
+        conn.commit()
+        conn.close()
+        return True
+
+    def add_item(self, user_id, item_id):
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO inventory (user_id, item_id, quantity) VALUES (?, ?, 1) ON CONFLICT(user_id, item_id) DO UPDATE SET quantity = quantity + 1",
+            (user_id, item_id)
+        )
+        conn.commit()
+        conn.close()
+
+    @app_commands.command(name='balance', description="Check your coin balance and level.")
+    async def balance(self, interaction: discord.Interaction):
+        stats = self.get_stats(interaction.user.id)
+        coins, xp, level = stats
+        xp_needed = level * 100
+        embed = DionEmbed(
+            title="🏦 Dion Profile",
+            description=f"**{interaction.user.name}**'s Stats:"
+        )
+        embed.add_field(name="🪙 Coins", value=f"**{coins}**")
+        embed.add_field(name="⭐ Level", value=f"**{level}**")
+        embed.add_field(name="✨ XP", value=f"**{xp} / {xp_needed}**")
+        await interaction.response.send_message(embed=embed)
+
+    @app_commands.command(name='inventory', description="Check your items and titles.")
+    async def inventory(self, interaction: discord.Interaction):
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT item_id, quantity FROM inventory WHERE user_id = ?", (interaction.user.id,))
+        items = cursor.fetchall()
+        conn.close()
+        
+        embed = DionEmbed(title=f"🎒 {interaction.user.name}'s Inventory")
+        if not items:
+            embed.description = "Your inventory is empty."
+        else:
+            lines = [f"• **{item_id}**: x{qty}" for item_id, qty in items]
+            embed.description = "\n".join(lines)
+            
+        await interaction.response.send_message(embed=embed)
+
+    @app_commands.command(name='adventure', description="Go on an adventure to earn coins and items.")
+    @app_commands.choices(location=[
+        app_commands.Choice(name="Forest", value="Forest"),
+        app_commands.Choice(name="Cave", value="Cave"),
+        app_commands.Choice(name="City", value="City"),
+        app_commands.Choice(name="Treasure Hunt", value="Treasure Hunt")
+    ])
+    @app_commands.checks.cooldown(1, 60, key=lambda i: i.user.id) # 60 seconds cooldown
+    async def adventure(self, interaction: discord.Interaction, location: app_commands.Choice[str]):
+        coins_found = random.randint(10, 50)
+        item_found = None
+        
+        # 20% chance to find a rare item
+        if random.random() < 0.20:
+            items = ["Magic Stone", "Old Map", "Rusty Key", "Otter Plushie"]
+            item_found = random.choice(items)
+            
+        self.add_coins(interaction.user.id, coins_found)
+        leveled, new_lvl = self.add_xp(interaction.user.id, random.randint(5, 15))
+        if item_found:
+            self.add_item(interaction.user.id, item_found)
+            
+        desc = f"You explored the **{location.name}** and found **{coins_found} 🪙**!"
+        if leveled:
+            desc += f"\n\n🎉 **LEVEL UP!** You are now Level **{new_lvl}**!"
+        if item_found:
+            desc += f"\n\n✨ You also found a rare item: **{item_found}**!"
+            
+        embed = DionEmbed(title="🏕️ Adventure", description=desc)
+        await interaction.response.send_message(embed=embed)
+
+    @adventure.error
+    async def adventure_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
+        if isinstance(error, app_commands.CommandOnCooldown):
+            await interaction.response.send_message(f"⏳ You are tired. Rest for `{error.retry_after:.2f}` seconds before adventuring again.", ephemeral=True)
+
+    @app_commands.command(name='shop', description="Buy items or titles with coins.")
+    async def shop(self, interaction: discord.Interaction):
+        embed = DionEmbed(title="🛒 Dion Shop", description="Use `/buy <item_id>` to purchase.")
+        embed.add_field(name="Titles", value="• `title_pro`: Pro Gamer - 500 🪙\n• `title_vip`: VIP Member - 1000 🪙", inline=False)
+        embed.add_field(name="Items", value="• `item_coffee`: Coffee - 50 🪙\n• `item_ticket`: Lottery Ticket - 100 🪙\n• `item_pickaxe`: Pickaxe - 150 🪙\n• `item_fishing_rod`: Fishing Rod - 200 🪙\n• `item_magic_wand`: Magic Wand - 500 🪙\n• `item_pet_rock`: Pet Rock - 50 🪙", inline=False)
+        await interaction.response.send_message(embed=embed)
+
+    @app_commands.command(name='buy', description="Purchase an item from the shop.")
+    async def buy(self, interaction: discord.Interaction, item_id: str):
+        shop_items = {
+            "title_pro": 500,
+            "title_vip": 1000,
+            "item_coffee": 50,
+            "item_ticket": 100,
+            "item_pickaxe": 150,
+            "item_fishing_rod": 200,
+            "item_magic_wand": 500,
+            "item_pet_rock": 50
+        }
+        
+        item_id = item_id.lower()
+        if item_id not in shop_items:
+            return await interaction.response.send_message("❌ Invalid item ID.", ephemeral=True)
+            
+        price = shop_items[item_id]
+        
+        if self.remove_coins(interaction.user.id, price):
+            self.add_item(interaction.user.id, item_id)
+            await interaction.response.send_message(f"✅ You successfully purchased **{item_id}** for **{price} 🪙**!")
+        else:
+            await interaction.response.send_message("❌ You do not have enough coins.", ephemeral=True)
+
 
 async def setup(bot):
     await bot.add_cog(Games(bot))

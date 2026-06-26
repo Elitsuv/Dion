@@ -21,3 +21,4 @@ __pycache__/
 # Data & Configs (User Privacy)
 *.json
 *.csv
+*.db

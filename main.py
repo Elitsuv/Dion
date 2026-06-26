@@ -30,30 +30,35 @@ class DiscordBot(commands.Bot):
         Extensions are loaded explicitly to avoid file system race conditions.
         After loading extensions, the slash command tree is synced globally.
         """
-        print("🔗 Initializing extensions...")
-        extensions = ['cogs.engine', 'cogs.games', 'cogs.utility', 'cogs.help']
+        print("Initializing extensions...")
+        extensions = [
+            'cogs.games', 
+            'cogs.utility', 
+            'cogs.moderation', 
+            'cogs.events'
+        ]
         for ext in extensions:
             try:
                 await self.load_extension(ext)
-                print(f"✅ Successfully loaded: {ext}")
+                print(f"Successfully loaded: {ext}")
             except Exception as e:
-                print(f"❌ Failed to load {ext}: {e}")
+                print(f"Failed to load {ext}: {e}")
         
-        print("🔄 Syncing command tree...")
+        print("Syncing command tree...")
         try:
             synced = await self.tree.sync()
-            print(f"✅ Synced {len(synced)} command(s).")
+            print(f"Synced {len(synced)} command(s).")
         except Exception as e:
-            print(f"❌ Failed to sync command tree: {e}")
+            print(f"Failed to sync command tree: {e}")
 
     async def on_ready(self):
         """Called when the bot is fully ready and connected to Discord."""
-        print(f'🚀 System online. Logged in as: {self.user}')
-        print(f'📡 Connected to local machine node.')
+        print(f'System online. Logged in as: {self.user}')
+        print(f'Connected to local machine node.')
         await self.change_presence(
             activity=discord.Activity(
                 type=discord.ActivityType.playing, 
-                name="Dion Corp | v1.0.4"
+                name="Dion Corp | v2.0"
             )
         )
 
