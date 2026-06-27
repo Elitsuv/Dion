@@ -2,9 +2,8 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 from datetime import timedelta
-import sqlite3
 from utils.embeds import DionEmbed
-from utils.db import get_connection
+from utils.db import get_db
 
 class Moderation(commands.Cog):
     """
@@ -14,15 +13,18 @@ class Moderation(commands.Cog):
         self.bot = bot
 
     def log_action(self, user_id, moderator_id, reason, action_type="warn"):
-        conn = get_connection()
-        cursor = conn.cursor()
+        db = get_db()
         formatted_reason = f"[{action_type.upper()}] {reason}"
-        cursor.execute(
-            "INSERT INTO warnings (user_id, moderator_id, reason) VALUES (?, ?, ?)",
-            (user_id, moderator_id, formatted_reason)
-        )
-        conn.commit()
-        conn.close()
+        warn_id = len(db.data["warnings"]) + 1
+        
+        db.data["warnings"].append({
+            "warn_id": warn_id,
+            "user_id": user_id,
+            "moderator_id": moderator_id,
+            "reason": formatted_reason,
+            "timestamp": discord.utils.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        })
+        db.save()
 
     @app_commands.command(name='warn', description="Warn a user.")
     @app_commands.default_permissions(moderate_members=True)
@@ -44,20 +46,21 @@ class Moderation(commands.Cog):
     @app_commands.command(name='warnings', description="View warnings for a user.")
     @app_commands.default_permissions(moderate_members=True)
     async def warnings(self, interaction: discord.Interaction, member: discord.Member):
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT warn_id, moderator_id, reason, timestamp FROM warnings WHERE user_id = ? ORDER BY timestamp DESC LIMIT 10", (member.id,))
-        rows = cursor.fetchall()
-        conn.close()
+        db = get_db()
+        user_warnings = [w for w in db.data["warnings"] if w["user_id"] == member.id]
+        
+        # Sort by timestamp desc and limit 10
+        user_warnings.sort(key=lambda x: x["timestamp"], reverse=True)
+        user_warnings = user_warnings[:10]
 
-        if not rows:
+        if not user_warnings:
             return await interaction.response.send_message(f"✅ {member.mention} has no warnings.", ephemeral=True)
 
         embed = DionEmbed(title=f"Modlogs: {member.name}")
-        for warn_id, mod_id, reason, timestamp in rows:
-            mod = self.bot.get_user(mod_id)
-            mod_name = mod.name if mod else f"Unknown ({mod_id})"
-            embed.add_field(name=f"ID: {warn_id} | By: {mod_name}", value=f"{reason}\n*{timestamp}*", inline=False)
+        for w in user_warnings:
+            mod = self.bot.get_user(w["moderator_id"])
+            mod_name = mod.name if mod else f"Unknown ({w['moderator_id']})"
+            embed.add_field(name=f"ID: {w['warn_id']} | By: {mod_name}", value=f"{w['reason']}\n*{w['timestamp']}*", inline=False)
 
         await interaction.response.send_message(embed=embed)
 

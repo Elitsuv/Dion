@@ -1,11 +1,10 @@
 import discord
 from discord.ext import commands
 from discord import app_commands
-import sqlite3
 import asyncio
 from datetime import datetime, timedelta
 from utils.embeds import DionEmbed
-from utils.db import get_connection
+from utils.db import get_db
 
 class RSVPView(discord.ui.View):
     def __init__(self):
@@ -15,46 +14,39 @@ class RSVPView(discord.ui.View):
         message_id = interaction.message.id
         user_id = interaction.user.id
         
-        conn = get_connection()
-        cursor = conn.cursor()
+        db = get_db()
         
-        # Get event ID
-        cursor.execute("SELECT event_id FROM events WHERE message_id = ?", (message_id,))
-        event = cursor.fetchone()
+        event = next((e for e in db.data["events"] if e["message_id"] == message_id), None)
         if not event:
-            conn.close()
             return await interaction.response.send_message("❌ This event is no longer active in the database.", ephemeral=True)
             
-        event_id = event[0]
+        event_id = event["event_id"]
         
-        # Insert or update RSVP
-        cursor.execute(
-            "INSERT OR REPLACE INTO event_rsvps (event_id, user_id, status) VALUES (?, ?, ?)",
-            (event_id, user_id, status)
-        )
-        conn.commit()
+        db.data["event_rsvps"] = [r for r in db.data["event_rsvps"] if not (r["event_id"] == event_id and r["user_id"] == user_id)]
+        db.data["event_rsvps"].append({
+            "event_id": event_id,
+            "user_id": user_id,
+            "status": status
+        })
+        db.save()
         
-        # Fetch updated counts
-        cursor.execute("SELECT status, COUNT(*) FROM event_rsvps WHERE event_id = ? GROUP BY status", (event_id,))
-        counts = {row[0]: row[1] for row in cursor.fetchall()}
-        conn.close()
+        counts = {"attending": 0, "maybe": 0, "not_coming": 0}
+        for r in db.data["event_rsvps"]:
+            if r["event_id"] == event_id:
+                counts[r["status"]] = counts.get(r["status"], 0) + 1
         
-        # Re-build the embed
         embed = interaction.message.embeds[0]
         
-        # Find the fields and update them
         attending_str = f"✅ Attending: {counts.get('attending', 0)}"
         maybe_str = f"❔ Maybe: {counts.get('maybe', 0)}"
         not_coming_str = f"❌ Not Coming: {counts.get('not_coming', 0)}"
         
-        # We assume the RSVP counts are the first field.
         if len(embed.fields) > 0:
             embed.set_field_at(0, name="RSVPs", value=f"{attending_str} | {maybe_str} | {not_coming_str}", inline=False)
         else:
             embed.add_field(name="RSVPs", value=f"{attending_str} | {maybe_str} | {not_coming_str}", inline=False)
 
         await interaction.response.edit_message(embed=embed)
-        # We also send an ephemeral confirmation
         await interaction.followup.send(f"Your RSVP has been recorded as: **{status}**.", ephemeral=True)
 
     @discord.ui.button(label="Attending", style=discord.ButtonStyle.success, emoji="✅", custom_id="rsvp_attending")
@@ -93,24 +85,19 @@ class Events(commands.Cog):
     async def event_timer(self, channel, message_id, delay, title):
         await asyncio.sleep(delay)
         
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT event_id FROM events WHERE message_id = ?", (message_id,))
-        event = cursor.fetchone()
+        db = get_db()
+        event = next((e for e in db.data["events"] if e["message_id"] == message_id), None)
         if not event:
-            conn.close()
             return
             
-        event_id = event[0]
-        cursor.execute("SELECT user_id FROM event_rsvps WHERE event_id = ? AND status = 'attending'", (event_id,))
-        attendees = cursor.fetchall()
+        event_id = event["event_id"]
+        attendees = [r["user_id"] for r in db.data["event_rsvps"] if r["event_id"] == event_id and r["status"] == "attending"]
         
-        cursor.execute("DELETE FROM events WHERE event_id = ?", (event_id,))
-        cursor.execute("DELETE FROM event_rsvps WHERE event_id = ?", (event_id,))
-        conn.commit()
-        conn.close()
+        db.data["events"] = [e for e in db.data["events"] if e["event_id"] != event_id]
+        db.data["event_rsvps"] = [r for r in db.data["event_rsvps"] if r["event_id"] != event_id]
+        db.save()
         
-        mentions = " ".join([f"<@{row[0]}>" for row in attendees])
+        mentions = " ".join([f"<@{uid}>" for uid in attendees])
         if not mentions:
             mentions = "No one RSVP'd 'Attending'."
             
@@ -135,14 +122,19 @@ class Events(commands.Cog):
         await interaction.response.send_message("Event created successfully!", ephemeral=True)
         msg = await interaction.channel.send(embed=embed, view=RSVPView())
         
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute(
-            "INSERT INTO events (guild_id, creator_id, title, description, event_time, message_id) VALUES (?, ?, ?, ?, ?, ?)",
-            (interaction.guild.id, interaction.user.id, title, description, str(timestamp), msg.id)
-        )
-        conn.commit()
-        conn.close()
+        db = get_db()
+        event_id = int(datetime.utcnow().timestamp() * 1000)
+        
+        db.data["events"].append({
+            "event_id": event_id,
+            "guild_id": interaction.guild.id,
+            "creator_id": interaction.user.id,
+            "title": title,
+            "description": description,
+            "event_time": str(timestamp),
+            "message_id": msg.id
+        })
+        db.save()
         
         delay = (trigger_time - datetime.utcnow()).total_seconds()
         if delay > 0:
@@ -150,45 +142,36 @@ class Events(commands.Cog):
 
     @app_commands.command(name='event_list', description="View upcoming events in this server.")
     async def event_list(self, interaction: discord.Interaction):
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT event_id, title, event_time FROM events WHERE guild_id = ? ORDER BY event_id DESC LIMIT 10", (interaction.guild.id,))
-        events = cursor.fetchall()
-        conn.close()
+        db = get_db()
+        guild_events = [e for e in db.data["events"] if e["guild_id"] == interaction.guild.id][-10:]
         
-        if not events:
+        if not guild_events:
             return await interaction.response.send_message("No upcoming events found.", ephemeral=True)
             
         embed = DionEmbed(title="Upcoming Events")
-        for e_id, title, e_time in events:
-            embed.add_field(name=f"ID: {e_id} | {title}", value=f"Time: {e_time}", inline=False)
+        for e in reversed(guild_events):
+            embed.add_field(name=f"ID: {e['event_id']} | {e['title']}", value=f"Time: <t:{e['event_time']}:F>", inline=False)
             
         await interaction.response.send_message(embed=embed)
 
     @app_commands.command(name='event_cancel', description="Cancel an event by its ID.")
     @app_commands.default_permissions(manage_events=True)
     async def event_cancel(self, interaction: discord.Interaction, event_id: int):
-        conn = get_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute("SELECT message_id FROM events WHERE event_id = ? AND guild_id = ?", (event_id, interaction.guild.id))
-        event = cursor.fetchone()
+        db = get_db()
+        event = next((e for e in db.data["events"] if e["event_id"] == event_id and e["guild_id"] == interaction.guild.id), None)
         
         if not event:
-            conn.close()
             return await interaction.response.send_message("❌ Event not found.", ephemeral=True)
             
-        cursor.execute("DELETE FROM events WHERE event_id = ?", (event_id,))
-        cursor.execute("DELETE FROM event_rsvps WHERE event_id = ?", (event_id,))
-        conn.commit()
-        conn.close()
+        db.data["events"] = [e for e in db.data["events"] if e["event_id"] != event_id]
+        db.data["event_rsvps"] = [r for r in db.data["event_rsvps"] if r["event_id"] != event_id]
+        db.save()
         
-        # Try to delete the original message
         try:
-            msg = await interaction.channel.fetch_message(event[0])
+            msg = await interaction.channel.fetch_message(event["message_id"])
             await msg.delete()
         except discord.NotFound:
-            pass # Message already deleted
+            pass
             
         await interaction.response.send_message(f"✅ Event `{event_id}` has been cancelled.", ephemeral=True)
 

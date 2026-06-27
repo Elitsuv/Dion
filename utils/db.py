@@ -1,115 +1,44 @@
-import sqlite3
+import json
 import os
+import threading
 
-DB_PATH = "data/dion.db"
+DB_PATH = "data/dion.json"
 
-def get_connection():
-    # Ensure data folder exists
-    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
-    return sqlite3.connect(DB_PATH, check_same_thread=False)
+class JSONDatabase:
+    def __init__(self, path):
+        self.path = path
+        self.lock = threading.Lock()
+        self.data = self._load()
 
-def setup_db():
-    conn = get_connection()
-    cursor = conn.cursor()
-    
-    # --- Analytics ---
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS command_usage (
-        user_id INTEGER PRIMARY KEY,
-        commands_used INTEGER DEFAULT 0
-    )
-    """)
+    def _load(self):
+        if not os.path.exists(self.path):
+            os.makedirs(os.path.dirname(self.path), exist_ok=True)
+            default_data = {
+                "events": [],
+                "event_rsvps": [],
+                "temp_voice_config": {},
+                "active_temp_channels": {},
+                "warnings": [],
+                "command_usage": {},
+                "user_last_active": {}
+            }
+            with open(self.path, "w", encoding="utf-8") as f:
+                json.dump(default_data, f, indent=4)
+            return default_data
+        
+        with open(self.path, "r", encoding="utf-8") as f:
+            try:
+                return json.load(f)
+            except json.JSONDecodeError:
+                return {}
 
-    # --- Economy / Games ---
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS economy (
-        user_id INTEGER PRIMARY KEY,
-        coins INTEGER DEFAULT 0,
-        xp INTEGER DEFAULT 0,
-        level INTEGER DEFAULT 1
-    )
-    """)
+    def save(self):
+        with self.lock:
+            with open(self.path, "w", encoding="utf-8") as f:
+                json.dump(self.data, f, indent=4)
 
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS inventory (
-        user_id INTEGER,
-        item_id TEXT,
-        quantity INTEGER DEFAULT 1,
-        PRIMARY KEY (user_id, item_id)
-    )
-    """)
+# Global database instance
+db = JSONDatabase(DB_PATH)
 
-    # --- Moderation ---
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS warnings (
-        warn_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER,
-        moderator_id INTEGER,
-        reason TEXT,
-        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-    """)
-
-    # --- Events ---
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS events (
-        event_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        guild_id INTEGER,
-        creator_id INTEGER,
-        title TEXT,
-        description TEXT,
-        event_time TEXT,
-        message_id INTEGER
-    )
-    """)
-
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS event_rsvps (
-        event_id INTEGER,
-        user_id INTEGER,
-        status TEXT, -- 'attending', 'maybe', 'not_coming'
-        PRIMARY KEY (event_id, user_id)
-    )
-    """)
-
-    # --- Alerts ---
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS alert_subscriptions (
-        user_id INTEGER,
-        guild_id INTEGER,
-        category TEXT,
-        PRIMARY KEY (user_id, guild_id, category)
-    )
-    """)
-
-    # --- Temp Voice Channels ---
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS temp_voice_config (
-        guild_id INTEGER PRIMARY KEY,
-        setup_channel_id INTEGER,
-        category_id INTEGER
-    )
-    """)
-
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS active_temp_channels (
-        channel_id INTEGER PRIMARY KEY,
-        owner_id INTEGER
-    )
-    """)
-
-    # --- Reminders ---
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS reminders (
-        reminder_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER,
-        reminder_text TEXT,
-        trigger_time TEXT
-    )
-    """)
-
-    conn.commit()
-    conn.close()
-
-# Initialize DB when the module is imported
-setup_db()
+def get_db():
+    return db

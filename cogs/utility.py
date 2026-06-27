@@ -3,10 +3,9 @@ from discord.ext import commands
 from discord import app_commands
 import asyncio
 from datetime import datetime, timedelta
-import sqlite3
 
 from utils.embeds import DionEmbed
-from utils.db import get_connection
+from utils.db import get_db
 
 class Utility(commands.Cog):
     """
@@ -18,34 +17,29 @@ class Utility(commands.Cog):
         self.bot = bot
 
     def get_config(self, guild_id):
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT setup_channel_id, category_id FROM temp_voice_config WHERE guild_id = ?", (guild_id,))
-        row = cursor.fetchone()
-        conn.close()
-        return row
+        db = get_db()
+        config = db.data["temp_voice_config"].get(str(guild_id))
+        if config:
+            return (config["setup_channel_id"], config["category_id"])
+        return None
 
     def get_temp_channel(self, channel_id):
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT owner_id FROM active_temp_channels WHERE channel_id = ?", (channel_id,))
-        row = cursor.fetchone()
-        conn.close()
-        return row
+        db = get_db()
+        channel = db.data["active_temp_channels"].get(str(channel_id))
+        if channel:
+            return (channel["owner_id"],)
+        return None
 
     def set_temp_channel(self, channel_id, owner_id):
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute("INSERT OR REPLACE INTO active_temp_channels (channel_id, owner_id) VALUES (?, ?)", (channel_id, owner_id))
-        conn.commit()
-        conn.close()
+        db = get_db()
+        db.data["active_temp_channels"][str(channel_id)] = {"owner_id": owner_id}
+        db.save()
         
     def remove_temp_channel(self, channel_id):
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute("DELETE FROM active_temp_channels WHERE channel_id = ?", (channel_id,))
-        conn.commit()
-        conn.close()
+        db = get_db()
+        if str(channel_id) in db.data["active_temp_channels"]:
+            del db.data["active_temp_channels"][str(channel_id)]
+            db.save()
 
     @app_commands.command(name='vc_setup', description="Sets up the temporary voice channels system.")
     @app_commands.default_permissions(administrator=True)
@@ -59,14 +53,12 @@ class Utility(commands.Cog):
         if not join_channel:
             join_channel = await guild.create_voice_channel("➕ Create Voice Channel", category=category)
             
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute(
-            "INSERT OR REPLACE INTO temp_voice_config (guild_id, setup_channel_id, category_id) VALUES (?, ?, ?)",
-            (guild.id, join_channel.id, category.id)
-        )
-        conn.commit()
-        conn.close()
+        db = get_db()
+        db.data["temp_voice_config"][str(guild.id)] = {
+            "setup_channel_id": join_channel.id,
+            "category_id": category.id
+        }
+        db.save()
             
         embed = DionEmbed(
             title="🎤 Voice Setup Complete",

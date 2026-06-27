@@ -8,6 +8,7 @@ import asyncio
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
+from utils.db import get_db
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -49,6 +50,45 @@ class DiscordBot(commands.Bot):
             print(f"Synced {len(synced)} command(s).")
         except Exception as e:
             print(f"Failed to sync command tree: {e}")
+            
+        self.loop.create_task(self.live_stats_task())
+
+    async def on_interaction(self, interaction: discord.Interaction):
+        if interaction.type == discord.InteractionType.application_command:
+            db = get_db()
+            user_id = str(interaction.user.id)
+            db.data["command_usage"][user_id] = db.data.get("command_usage", {}).get(user_id, 0) + 1
+            db.data["user_last_active"][user_id] = discord.utils.utcnow().strftime("%H:%M:%S")
+            db.save()
+
+    async def live_stats_task(self):
+        await self.wait_until_ready()
+        while not self.is_closed():
+            os.system('cls' if os.name == 'nt' else 'clear')
+            db = get_db()
+            print("="*60)
+            print(f"{'User':<25} | {'Commands Used':<15} | {'Last Active':<15}")
+            print("-" * 60)
+            
+            usage = db.data.get("command_usage", {})
+            last_active = db.data.get("user_last_active", {})
+            
+            sorted_users = sorted(usage.items(), key=lambda x: x[1], reverse=True)
+            
+            if not sorted_users:
+                print(f"{'No activity yet.':<25} | {'-':<15} | {'-':<15}")
+            else:
+                for uid_str, count in sorted_users[:15]:
+                    user = self.get_user(int(uid_str))
+                    username = user.name if user else f"Unknown ({uid_str})"
+                    if len(username) > 23:
+                        username = username[:20] + "..."
+                    active_time = last_active.get(uid_str, "Unknown")
+                    print(f"{username:<25} | {count:<15} | {active_time:<15}")
+                    
+            print("="*60)
+            print("Bot is running... Press Ctrl+C to exit.")
+            await asyncio.sleep(10)
 
     async def on_ready(self):
         """Called when the bot is fully ready and connected to Discord."""
