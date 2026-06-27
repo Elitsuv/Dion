@@ -32,7 +32,6 @@ class DiscordBot(commands.Bot):
         """
         print("Initializing extensions...")
         extensions = [
-            'cogs.games', 
             'cogs.utility', 
             'cogs.moderation', 
             'cogs.events'
@@ -58,7 +57,7 @@ class DiscordBot(commands.Bot):
         await self.change_presence(
             activity=discord.Activity(
                 type=discord.ActivityType.playing, 
-                name="Dion Corp | v2.0"
+                name="Dion Corp | v2.1.0"
             )
         )
 

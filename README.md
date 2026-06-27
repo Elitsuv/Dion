@@ -1,23 +1,20 @@
-# Dion 🦦
+# Dion 🦦 v2.1.0
 
 Dion is a lightweight, modern, and highly polished Discord companion bot built for private community servers. Built with `discord.py` and `app_commands`, Dion prioritizes clean architecture, native UI components (buttons, embeds), and a strict "quality over quantity" design philosophy.
 
 ## ✨ Features
 
-- **🎮 RPG Economy Layer:** A lightweight progression system. Users can explore (`/adventure`), level up, earn XP, and buy items in the `/shop`.
-- **🕹️ Classic Games:** Includes multiplayer Tic-Tac-Toe and a server-wide Atlas (Country Word Chain) game, fully integrated into the economy.
 - **🎤 Temporary Voice Channels:** Users can join a dedicated "Create Voice" channel, and Dion will instantly spawn a private, temporary voice lounge that deletes itself when empty.
-- **📅 Event Management:** Schedule server events with interactive, real-time RSVP buttons (✅ ❔ ❌).
+- **📅 Event Management:** Schedule server events with interactive, real-time RSVP buttons (✅ ❔ ❌) and automated timer notifications.
 - **🔔 Opt-in Alerts:** A category-based subscription system so users only get pinged for the topics they care about.
-- **🛡️ Essential Moderation & Utility:** Clean, non-bloated tools like `/warn`, `/poll`, and `/remind`.
+- **🛡️ Essential Moderation & Utility:** Clean, non-bloated moderation tools to keep your server safe.
 
 ## 🏗️ Architecture
 
-To keep the codebase maintainable for solo development, Dion is consolidated into four core extensions:
-1. `cogs/games.py` - Economy, Games, and XP systems.
-2. `cogs/utility.py` - Temporary Voice logic, polls, and reminders.
-3. `cogs/events.py` - Event scheduling and RSVP tracking.
-4. `cogs/moderation.py` - Core server moderation tools.
+To keep the codebase maintainable for solo development, Dion is consolidated into three core extensions:
+1. `cogs/utility.py` - Temporary Voice logic.
+2. `cogs/events.py` - Event scheduling and RSVP tracking.
+3. `cogs/moderation.py` - Core server moderation tools.
 
 Data is stored locally and synchronously using **SQLite** (`data/dion.db`), ensuring reliable data persistence without the overhead of heavy external databases.
 

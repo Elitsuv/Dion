@@ -2,7 +2,8 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 import sqlite3
-from datetime import datetime
+import asyncio
+from datetime import datetime, timedelta
 from utils.embeds import DionEmbed
 from utils.db import get_connection
 
@@ -76,12 +77,57 @@ class Events(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    def parse_time(self, time_str: str) -> datetime:
+        """Simple time parser for strings like '2h', '30m'."""
+        time_str = time_str.lower()
+        now = datetime.utcnow()
+        if time_str.endswith('h'):
+            return now + timedelta(hours=int(time_str[:-1]))
+        elif time_str.endswith('m'):
+            return now + timedelta(minutes=int(time_str[:-1]))
+        elif time_str.endswith('d'):
+            return now + timedelta(days=int(time_str[:-1]))
+        else:
+            raise ValueError("Invalid time format. Use something like 2h, 30m, 1d.")
+
+    async def event_timer(self, channel, message_id, delay, title):
+        await asyncio.sleep(delay)
+        
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT event_id FROM events WHERE message_id = ?", (message_id,))
+        event = cursor.fetchone()
+        if not event:
+            conn.close()
+            return
+            
+        event_id = event[0]
+        cursor.execute("SELECT user_id FROM event_rsvps WHERE event_id = ? AND status = 'attending'", (event_id,))
+        attendees = cursor.fetchall()
+        
+        cursor.execute("DELETE FROM events WHERE event_id = ?", (event_id,))
+        cursor.execute("DELETE FROM event_rsvps WHERE event_id = ?", (event_id,))
+        conn.commit()
+        conn.close()
+        
+        mentions = " ".join([f"<@{row[0]}>" for row in attendees])
+        if not mentions:
+            mentions = "No one RSVP'd 'Attending'."
+            
+        await channel.send(f"🔔 **Event Starting:** {title}!\n{mentions}")
+
     @app_commands.command(name='event_create', description="Create a new event with RSVP buttons.")
-    @app_commands.describe(title="Event title", description="Event details", time="Event time (e.g., 'Tonight 8PM')")
-    async def event_create(self, interaction: discord.Interaction, title: str, description: str, time: str):
+    @app_commands.describe(title="Event title", description="Event details", duration="Time until event (e.g., '2h', '30m')")
+    async def event_create(self, interaction: discord.Interaction, title: str, description: str, duration: str):
+        try:
+            trigger_time = self.parse_time(duration)
+        except ValueError as e:
+            return await interaction.response.send_message(f"❌ {e}", ephemeral=True)
+            
+        timestamp = int(trigger_time.timestamp())
         embed = DionEmbed(
             title=f"📅 {title}",
-            description=f"**Details:** {description}\n**Time:** {time}"
+            description=f"**Details:** {description}\n**Time:** <t:{timestamp}:F> (<t:{timestamp}:R>)"
         )
         embed.set_author(name=f"Hosted by {interaction.user.name}", icon_url=interaction.user.display_avatar.url)
         embed.add_field(name="RSVPs", value="✅ Attending: 0 | ❔ Maybe: 0 | ❌ Not Coming: 0", inline=False)
@@ -93,10 +139,14 @@ class Events(commands.Cog):
         cursor = conn.cursor()
         cursor.execute(
             "INSERT INTO events (guild_id, creator_id, title, description, event_time, message_id) VALUES (?, ?, ?, ?, ?, ?)",
-            (interaction.guild.id, interaction.user.id, title, description, time, msg.id)
+            (interaction.guild.id, interaction.user.id, title, description, str(timestamp), msg.id)
         )
         conn.commit()
         conn.close()
+        
+        delay = (trigger_time - datetime.utcnow()).total_seconds()
+        if delay > 0:
+            self.bot.loop.create_task(self.event_timer(interaction.channel, msg.id, delay, title))
 
     @app_commands.command(name='event_list', description="View upcoming events in this server.")
     async def event_list(self, interaction: discord.Interaction):
