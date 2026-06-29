@@ -16,24 +16,18 @@ class RSVPView(discord.ui.View):
         
         db = get_db()
         
-        event = next((e for e in db.data["events"] if e["message_id"] == message_id), None)
+        event = db.get_event_by_message(message_id)
         if not event:
             return await interaction.response.send_message("❌ This event is no longer active in the database.", ephemeral=True)
             
         event_id = event["event_id"]
         
-        db.data["event_rsvps"] = [r for r in db.data["event_rsvps"] if not (r["event_id"] == event_id and r["user_id"] == user_id)]
-        db.data["event_rsvps"].append({
-            "event_id": event_id,
-            "user_id": user_id,
-            "status": status
-        })
-        db.save()
+        db.set_rsvp(event_id, user_id, status)
         
+        rsvps = db.get_rsvps(event_id)
         counts = {"attending": 0, "maybe": 0, "not_coming": 0}
-        for r in db.data["event_rsvps"]:
-            if r["event_id"] == event_id:
-                counts[r["status"]] = counts.get(r["status"], 0) + 1
+        for r in rsvps:
+            counts[r["status"]] = counts.get(r["status"], 0) + 1
         
         embed = interaction.message.embeds[0]
         
@@ -47,7 +41,7 @@ class RSVPView(discord.ui.View):
             embed.add_field(name="RSVPs", value=f"{attending_str} | {maybe_str} | {not_coming_str}", inline=False)
 
         await interaction.response.edit_message(embed=embed)
-        await interaction.followup.send(f"Your RSVP has been recorded as: **{status}**.", ephemeral=True)
+        await interaction.followup.send(f"Your RSVP has been recorded as: **{status.replace('_', ' ').title()}**.", ephemeral=True)
 
     @discord.ui.button(label="Attending", style=discord.ButtonStyle.success, emoji="✅", custom_id="rsvp_attending")
     async def rsvp_attending(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -68,6 +62,41 @@ class Events(commands.Cog):
     """
     def __init__(self, bot):
         self.bot = bot
+        self.active_timers = {}
+
+    async def cog_load(self):
+        # Schedule the event recovery task
+        self.bot.loop.create_task(self.recover_events())
+
+    async def recover_events(self):
+        await self.bot.wait_until_ready()
+        db = get_db()
+        all_events = db.get_events()
+        now = datetime.utcnow()
+        for e in all_events:
+            event_id = e["event_id"]
+            trigger_time = datetime.utcfromtimestamp(int(e["event_time"]))
+            delay = (trigger_time - now).total_seconds()
+            
+            # Retrieve or fetch channel
+            channel = self.bot.get_channel(e["channel_id"])
+            if not channel:
+                try:
+                    channel = await self.bot.fetch_channel(e["channel_id"])
+                except discord.HTTPException:
+                    # Channel no longer exists, clean up event
+                    db.remove_event(event_id)
+                    continue
+
+            if delay <= 0:
+                if abs(delay) < 300:  # Within 5 minutes, run immediately
+                    self.bot.loop.create_task(self.event_timer(channel, e["message_id"], 0, e["title"]))
+                else:
+                    db.remove_event(event_id)
+            else:
+                self.active_timers[event_id] = self.bot.loop.create_task(
+                    self.event_timer(channel, e["message_id"], delay, e["title"])
+                )
 
     def parse_time(self, time_str: str) -> datetime:
         """Simple time parser for strings like '2h', '30m'."""
@@ -83,25 +112,32 @@ class Events(commands.Cog):
             raise ValueError("Invalid time format. Use something like 2h, 30m, 1d.")
 
     async def event_timer(self, channel, message_id, delay, title):
-        await asyncio.sleep(delay)
+        try:
+            await asyncio.sleep(delay)
+        except asyncio.CancelledError:
+            return
         
         db = get_db()
-        event = next((e for e in db.data["events"] if e["message_id"] == message_id), None)
+        event = db.get_event_by_message(message_id)
         if not event:
             return
             
         event_id = event["event_id"]
-        attendees = [r["user_id"] for r in db.data["event_rsvps"] if r["event_id"] == event_id and r["status"] == "attending"]
+        rsvps = db.get_rsvps(event_id)
+        attendees = [r["user_id"] for r in rsvps if r["status"] == "attending"]
         
-        db.data["events"] = [e for e in db.data["events"] if e["event_id"] != event_id]
-        db.data["event_rsvps"] = [r for r in db.data["event_rsvps"] if r["event_id"] != event_id]
-        db.save()
+        db.remove_event(event_id)
+        if event_id in self.active_timers:
+            del self.active_timers[event_id]
         
         mentions = " ".join([f"<@{uid}>" for uid in attendees])
         if not mentions:
             mentions = "No one RSVP'd 'Attending'."
             
-        await channel.send(f"🔔 **Event Starting:** {title}!\n{mentions}")
+        try:
+            await channel.send(f"🔔 **Event Starting:** {title}!\n{mentions}")
+        except discord.HTTPException:
+            pass
 
     @app_commands.command(name='event_create', description="Create a new event with RSVP buttons.")
     @app_commands.describe(title="Event title", description="Event details", duration="Time until event (e.g., '2h', '30m')")
@@ -125,25 +161,18 @@ class Events(commands.Cog):
         db = get_db()
         event_id = int(datetime.utcnow().timestamp() * 1000)
         
-        db.data["events"].append({
-            "event_id": event_id,
-            "guild_id": interaction.guild.id,
-            "creator_id": interaction.user.id,
-            "title": title,
-            "description": description,
-            "event_time": str(timestamp),
-            "message_id": msg.id
-        })
-        db.save()
+        db.add_event(event_id, interaction.guild.id, interaction.user.id, title, description, timestamp, msg.id, interaction.channel.id)
         
         delay = (trigger_time - datetime.utcnow()).total_seconds()
         if delay > 0:
-            self.bot.loop.create_task(self.event_timer(interaction.channel, msg.id, delay, title))
+            self.active_timers[event_id] = self.bot.loop.create_task(
+                self.event_timer(interaction.channel, msg.id, delay, title)
+            )
 
     @app_commands.command(name='event_list', description="View upcoming events in this server.")
     async def event_list(self, interaction: discord.Interaction):
         db = get_db()
-        guild_events = [e for e in db.data["events"] if e["guild_id"] == interaction.guild.id][-10:]
+        guild_events = db.get_guild_events(interaction.guild.id)[-10:]
         
         if not guild_events:
             return await interaction.response.send_message("No upcoming events found.", ephemeral=True)
@@ -158,14 +187,16 @@ class Events(commands.Cog):
     @app_commands.default_permissions(manage_events=True)
     async def event_cancel(self, interaction: discord.Interaction, event_id: int):
         db = get_db()
-        event = next((e for e in db.data["events"] if e["event_id"] == event_id and e["guild_id"] == interaction.guild.id), None)
+        event = db.get_event(event_id)
         
-        if not event:
+        if not event or event["guild_id"] != interaction.guild.id:
             return await interaction.response.send_message("❌ Event not found.", ephemeral=True)
             
-        db.data["events"] = [e for e in db.data["events"] if e["event_id"] != event_id]
-        db.data["event_rsvps"] = [r for r in db.data["event_rsvps"] if r["event_id"] != event_id]
-        db.save()
+        db.remove_event(event_id)
+        
+        if event_id in self.active_timers:
+            self.active_timers[event_id].cancel()
+            del self.active_timers[event_id]
         
         try:
             msg = await interaction.channel.fetch_message(event["message_id"])

@@ -18,28 +18,25 @@ class Utility(commands.Cog):
 
     def get_config(self, guild_id):
         db = get_db()
-        config = db.data["temp_voice_config"].get(str(guild_id))
+        config = db.get_temp_voice_config(guild_id)
         if config:
             return (config["setup_channel_id"], config["category_id"])
         return None
 
     def get_temp_channel(self, channel_id):
         db = get_db()
-        channel = db.data["active_temp_channels"].get(str(channel_id))
+        channel = db.get_active_temp_channel(channel_id)
         if channel:
-            return (channel["owner_id"],)
+            return (int(channel["owner_id"]),)
         return None
 
     def set_temp_channel(self, channel_id, owner_id):
         db = get_db()
-        db.data["active_temp_channels"][str(channel_id)] = {"owner_id": owner_id}
-        db.save()
+        db.set_active_temp_channel(channel_id, owner_id)
         
     def remove_temp_channel(self, channel_id):
         db = get_db()
-        if str(channel_id) in db.data["active_temp_channels"]:
-            del db.data["active_temp_channels"][str(channel_id)]
-            db.save()
+        db.remove_active_temp_channel(channel_id)
 
     @app_commands.command(name='vc_setup', description="Sets up the temporary voice channels system.")
     @app_commands.default_permissions(administrator=True)
@@ -54,11 +51,7 @@ class Utility(commands.Cog):
             join_channel = await guild.create_voice_channel("➕ Create Voice Channel", category=category)
             
         db = get_db()
-        db.data["temp_voice_config"][str(guild.id)] = {
-            "setup_channel_id": join_channel.id,
-            "category_id": category.id
-        }
-        db.save()
+        db.set_temp_voice_config(guild.id, join_channel.id, category.id)
             
         embed = DionEmbed(
             title="🎤 Voice Setup Complete",

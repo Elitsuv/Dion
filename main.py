@@ -7,6 +7,7 @@ import os
 import asyncio
 import discord
 from discord.ext import commands
+from discord import app_commands
 from dotenv import load_dotenv
 from utils.db import get_db
 
@@ -35,7 +36,9 @@ class DiscordBot(commands.Bot):
         extensions = [
             'cogs.utility', 
             'cogs.moderation', 
-            'cogs.events'
+            'cogs.events',
+            'cogs.alerts',
+            'cogs.help'
         ]
         for ext in extensions:
             try:
@@ -44,6 +47,34 @@ class DiscordBot(commands.Bot):
             except Exception as e:
                 print(f"Failed to load {ext}: {e}")
         
+        # Register global slash command error handler
+        @self.tree.error
+        async def on_app_command_error(interaction: discord.Interaction, error: app_commands.AppCommandError):
+            from utils.embeds import DionEmbed
+            embed = DionEmbed(
+                title="Error Encountered",
+                description="An error occurred while executing this command."
+            )
+            embed.color = 0xFF0000 # Red for errors
+            
+            if isinstance(error, app_commands.MissingPermissions):
+                embed.description = f"❌ You do not have the required permissions to use this command.\nMissing: `{', '.join(error.missing_permissions)}`"
+            elif isinstance(error, app_commands.BotMissingPermissions):
+                embed.description = f"❌ The bot is missing permissions to perform this command.\nMissing: `{', '.join(error.missing_permissions)}`"
+            elif isinstance(error, app_commands.CommandOnCooldown):
+                embed.description = f"⏱️ This command is on cooldown. Try again in `{error.retry_after:.2f}s`."
+            else:
+                embed.description = f"❌ An unexpected error occurred: `{error}`"
+                print(f"Command Error: {error}")
+            
+            try:
+                if interaction.response.is_done():
+                    await interaction.followup.send(embed=embed, ephemeral=True)
+                else:
+                    await interaction.response.send_message(embed=embed, ephemeral=True)
+            except Exception as e:
+                print(f"Failed to respond to error: {e}")
+
         print("Syncing command tree...")
         try:
             synced = await self.tree.sync()
@@ -57,9 +88,8 @@ class DiscordBot(commands.Bot):
         if interaction.type == discord.InteractionType.application_command:
             db = get_db()
             user_id = str(interaction.user.id)
-            db.data["command_usage"][user_id] = db.data.get("command_usage", {}).get(user_id, 0) + 1
-            db.data["user_last_active"][user_id] = discord.utils.utcnow().strftime("%H:%M:%S")
-            db.save()
+            active_time = discord.utils.utcnow().strftime("%H:%M:%S")
+            db.record_command_usage(user_id, active_time)
 
     async def live_stats_task(self):
         await self.wait_until_ready()
@@ -70,20 +100,20 @@ class DiscordBot(commands.Bot):
             print(f"{'User':<25} | {'Commands Used':<15} | {'Last Active':<15}")
             print("-" * 60)
             
-            usage = db.data.get("command_usage", {})
-            last_active = db.data.get("user_last_active", {})
+            stats = db.get_command_usage_stats()
             
-            sorted_users = sorted(usage.items(), key=lambda x: x[1], reverse=True)
-            
-            if not sorted_users:
+            if not stats:
                 print(f"{'No activity yet.':<25} | {'-':<15} | {'-':<15}")
             else:
-                for uid_str, count in sorted_users[:15]:
+                for row in stats:
+                    uid_str = row["user_id"]
+                    count = row["command_count"]
+                    active_time = row["last_active"]
+                    
                     user = self.get_user(int(uid_str))
                     username = user.name if user else f"Unknown ({uid_str})"
                     if len(username) > 23:
                         username = username[:20] + "..."
-                    active_time = last_active.get(uid_str, "Unknown")
                     print(f"{username:<25} | {count:<15} | {active_time:<15}")
                     
             print("="*60)
@@ -106,4 +136,4 @@ bot = DiscordBot()
 if __name__ == '__main__':
     if not TOKEN:
         raise ValueError("CRITICAL: DISCORD_TOKEN variable is missing in .env file.")
-    bot.run(TOKEN)
+    bot.run(TOKEN)

@@ -6,6 +6,7 @@ Provides an organized, central command directory.
 import discord
 from discord.ext import commands
 from discord import app_commands
+from utils.embeds import DionEmbed
 
 class Help(commands.Cog):
     """
@@ -20,27 +21,59 @@ class Help(commands.Cog):
     @app_commands.command(name='help', description="Displays the Dion Corp internal command directory.")
     async def help_command(self, interaction: discord.Interaction):
         """Displays a dynamic, all-in-one help menu."""
-        embed = discord.Embed(
-            title="🏢 Dion Corp | Central Command Directory",
-            description="Welcome to the Dion Corp bot terminal. Below is the list of authorized operations:",
-            color=0x005A9C
+        embed = DionEmbed(
+            title="Dion Corp | Central Command Directory",
+            description="Welcome to the Dion Corp bot terminal. Below is the list of authorized operations:"
         )
+        embed.color = 0x005A9C
         
         embed.add_field(
-            name="🎮 Entertainment & Progress", 
-            value="`/tictactoe <opponent>` - Play Tic-Tac-Toe.\n`/set_country_chain <channel> <mode>` - Setup word chain.\n`/profile [user]` - View Dion Corp employee profile & level.",
+            name="🎤 Temporary Voice Channels", 
+            value=(
+                "`/vc_setup` - Sets up the voice channels category and creator channel.\n"
+                "`/vc_lock` - Locks your temporary voice channel.\n"
+                "`/vc_unlock` - Unlocks your temporary voice channel.\n"
+                "`/vc_rename <name>` - Renames your voice channel.\n"
+                "`/vc_limit <limit>` - Sets a user limit on your channel.\n"
+                "`/vc_delete` - Deletes your temporary voice channel immediately."
+            ),
             inline=False
         )
         
         embed.add_field(
-            name="🎫 User Engagement & Voice",
-            value="`/giveaway <prize> <duration> [winners]` - Start a server giveaway.\n`/setup_tickets` - Initialize the ticket support portal.\n`/setup_voice` - Setup Dynamic 'Join to Create' voice hubs.\n`/lfg <game> [role] [details]` - Ping for players.",
+            name="📅 Event Management",
+            value=(
+                "`/event_create <title> <description> <duration>` - Create a new event with RSVP buttons.\n"
+                "`/event_list` - View upcoming events in the server.\n"
+                "`/event_cancel <event_id>` - Cancel an event."
+            ),
+            inline=False
+        )
+
+        embed.add_field(
+            name="🔔 Opt-in Alerts System",
+            value=(
+                "`/alert_create <name>` - Create a new alert topic and its role (Admin).\n"
+                "`/alert_delete <name>` - Delete an alert topic and its role (Admin).\n"
+                "`/alert_list` - List all available alert topics.\n"
+                "`/alert_join <name>` - Subscribe to an alert topic.\n"
+                "`/alert_leave <name>` - Unsubscribe from an alert topic.\n"
+                "`/alert_send <name> <message>` - Send announcement pinging topic subscribers (Admin)."
+            ),
             inline=False
         )
         
         embed.add_field(
-            name="🛡️ Administration & Security", 
-            value="`/clear <amount>` - Bulk delete messages.\n`/lock` / `/unlock` - Control channel text operations.\n`/timeout`, `/kick`, `/ban` - Access control tools.\n`/add_role`, `/remove_role` - Assign roles.\n`/add_level`, `/remove_level`, `/add_xp`, `/remove_xp` - Control employee progression.\n`/alert`, `/changelog` - Global announcements.",
+            name="🛡️ Administration & Moderation", 
+            value=(
+                "`/warn <member> <reason>` - Warn a member.\n"
+                "`/warnings <member>` - View warnings for a member.\n"
+                "`/modlogs <member>` - View modlogs for a member.\n"
+                "`/timeout <member> <minutes> [reason]` - Timeout a member.\n"
+                "`/kick <member> [reason]` - Kick a member.\n"
+                "`/ban <member> [reason]` - Ban a member.\n"
+                "`/purge [amount]` - Delete a specified number of messages."
+            ),
             inline=False
         )
         

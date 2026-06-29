@@ -15,16 +15,8 @@ class Moderation(commands.Cog):
     def log_action(self, user_id, moderator_id, reason, action_type="warn"):
         db = get_db()
         formatted_reason = f"[{action_type.upper()}] {reason}"
-        warn_id = len(db.data["warnings"]) + 1
-        
-        db.data["warnings"].append({
-            "warn_id": warn_id,
-            "user_id": user_id,
-            "moderator_id": moderator_id,
-            "reason": formatted_reason,
-            "timestamp": discord.utils.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-        })
-        db.save()
+        timestamp = discord.utils.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        db.add_warning(user_id, moderator_id, formatted_reason, timestamp)
 
     @app_commands.command(name='warn', description="Warn a user.")
     @app_commands.default_permissions(moderate_members=True)
@@ -47,7 +39,7 @@ class Moderation(commands.Cog):
     @app_commands.default_permissions(moderate_members=True)
     async def warnings(self, interaction: discord.Interaction, member: discord.Member):
         db = get_db()
-        user_warnings = [w for w in db.data["warnings"] if w["user_id"] == member.id]
+        user_warnings = db.get_warnings(member.id)
         
         # Sort by timestamp desc and limit 10
         user_warnings.sort(key=lambda x: x["timestamp"], reverse=True)
@@ -58,7 +50,7 @@ class Moderation(commands.Cog):
 
         embed = DionEmbed(title=f"Modlogs: {member.name}")
         for w in user_warnings:
-            mod = self.bot.get_user(w["moderator_id"])
+            mod = self.bot.get_user(int(w["moderator_id"]))
             mod_name = mod.name if mod else f"Unknown ({w['moderator_id']})"
             embed.add_field(name=f"ID: {w['warn_id']} | By: {mod_name}", value=f"{w['reason']}\n*{w['timestamp']}*", inline=False)
 
