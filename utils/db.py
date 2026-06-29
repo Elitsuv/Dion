@@ -88,6 +88,16 @@ class SQLiteDatabase:
                 UNIQUE(guild_id, name)
             )
         """, commit=True)
+        self._execute("""
+            CREATE TABLE IF NOT EXISTS reaction_roles (
+                guild_id TEXT,
+                message_id TEXT,
+                emoji TEXT,
+                role_id TEXT,
+                PRIMARY KEY (guild_id, message_id, emoji)
+            )
+        """, commit=True)
+
 
     def add_warning(self, user_id, moderator_id, reason, timestamp):
         self._execute(
@@ -207,6 +217,35 @@ class SQLiteDatabase:
 
     def get_alert_topic(self, guild_id, name):
         return self._execute("SELECT name, role_id FROM alert_topics WHERE guild_id = ? AND name = ?", (guild_id, name.lower()), fetchone=True)
+
+    def add_reaction_role(self, guild_id, message_id, emoji, role_id):
+        self._execute(
+            "INSERT OR REPLACE INTO reaction_roles (guild_id, message_id, emoji, role_id) VALUES (?, ?, ?, ?)",
+            (str(guild_id), str(message_id), str(emoji), str(role_id)),
+            commit=True
+        )
+
+    def remove_reaction_role(self, guild_id, message_id, emoji):
+        self._execute(
+            "DELETE FROM reaction_roles WHERE guild_id = ? AND message_id = ? AND emoji = ?",
+            (str(guild_id), str(message_id), str(emoji)),
+            commit=True
+        )
+
+    def get_reaction_role(self, guild_id, message_id, emoji):
+        return self._execute(
+            "SELECT role_id FROM reaction_roles WHERE guild_id = ? AND message_id = ? AND emoji = ?",
+            (str(guild_id), str(message_id), str(emoji)),
+            fetchone=True
+        )
+
+    def get_all_reaction_roles(self, guild_id):
+        return self._execute(
+            "SELECT message_id, emoji, role_id FROM reaction_roles WHERE guild_id = ?",
+            (str(guild_id),),
+            fetchall=True
+        )
+
 
 db = SQLiteDatabase(DB_PATH)
 

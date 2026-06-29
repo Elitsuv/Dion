@@ -13,9 +13,11 @@ class Moderation(commands.Cog):
         self.bot = bot
 
     def log_action(self, user_id, moderator_id, reason, action_type="warn"):
+        from datetime import datetime, timezone, timedelta
+        ist = timezone(timedelta(hours=5, minutes=30))
         db = get_db()
         formatted_reason = f"[{action_type.upper()}] {reason}"
-        timestamp = discord.utils.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        timestamp = datetime.now(ist).strftime("%Y-%m-%d %H:%M:%S")
         db.add_warning(user_id, moderator_id, formatted_reason, timestamp)
 
     @app_commands.command(name='warn', description="Warn a user.")

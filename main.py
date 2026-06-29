@@ -10,6 +10,10 @@ from discord.ext import commands
 from discord import app_commands
 from dotenv import load_dotenv
 from utils.db import get_db
+from datetime import datetime, timezone, timedelta
+
+IST = timezone(timedelta(hours=5, minutes=30))
+
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -36,8 +40,6 @@ class DiscordBot(commands.Bot):
         extensions = [
             'cogs.utility', 
             'cogs.moderation', 
-            'cogs.events',
-            'cogs.alerts',
             'cogs.help'
         ]
         for ext in extensions:
@@ -88,7 +90,7 @@ class DiscordBot(commands.Bot):
         if interaction.type == discord.InteractionType.application_command:
             db = get_db()
             user_id = str(interaction.user.id)
-            active_time = discord.utils.utcnow().strftime("%H:%M:%S")
+            active_time = datetime.now(IST).strftime("%H:%M:%S")
             db.record_command_usage(user_id, active_time)
 
     async def live_stats_task(self):
@@ -127,7 +129,7 @@ class DiscordBot(commands.Bot):
         await self.change_presence(
             activity=discord.Activity(
                 type=discord.ActivityType.playing, 
-                name="Dion Corp | v2.1.0"
+                name="Dion Corp | v2.2.0"
             )
         )
 
@@ -136,4 +138,4 @@ bot = DiscordBot()
 if __name__ == '__main__':
     if not TOKEN:
         raise ValueError("CRITICAL: DISCORD_TOKEN variable is missing in .env file.")
-    bot.run(TOKEN)
+    bot.run(TOKEN)

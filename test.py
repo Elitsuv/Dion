@@ -101,5 +101,21 @@ class TestDionDatabase(unittest.TestCase):
         topic = self.db.get_alert_topic(777, "gaming")
         self.assertIsNone(topic)
 
+    def test_reaction_roles(self):
+        self.db.add_reaction_role("111", "222", "👍", "333")
+        
+        mapping = self.db.get_reaction_role("111", "222", "👍")
+        self.assertIsNotNone(mapping)
+        self.assertEqual(mapping["role_id"], "333")
+
+        binds = self.db.get_all_reaction_roles("111")
+        self.assertEqual(len(binds), 1)
+        self.assertEqual(binds[0]["message_id"], "222")
+
+        self.db.remove_reaction_role("111", "222", "👍")
+        mapping = self.db.get_reaction_role("111", "222", "👍")
+        self.assertIsNone(mapping)
+
 if __name__ == '__main__':
     unittest.main()
+

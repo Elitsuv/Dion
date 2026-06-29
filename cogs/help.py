@@ -76,6 +76,25 @@ class Help(commands.Cog):
             ),
             inline=False
         )
+
+        embed.add_field(
+            name="🎭 Reaction Roles",
+            value=(
+                "`/reactionrole add <message_id> <emoji> <role>` - Bind a reaction role.\n"
+                "`/reactionrole remove <message_id> <emoji>` - Remove a reaction role bind.\n"
+                "`/reactionrole list` - List all active reaction role binds."
+            ),
+            inline=False
+        )
+
+        embed.add_field(
+            name="📢 Professional Messaging",
+            value=(
+                "`/say <message> [title] [channel] [image_file] [image_url] [color] [as_embed]` - Send a styled message on behalf of the bot."
+            ),
+            inline=False
+        )
+
         
         embed.set_thumbnail(url=self.bot.user.display_avatar.url)
         embed.set_footer(text=f"Authorized Request by: {interaction.user.display_name} | Dion Corp IT Division", icon_url=interaction.user.display_avatar.url)
