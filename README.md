@@ -1,4 +1,4 @@
-# Dion 🦦 v2.2.0
+# Dion v2.2.0
 
 Dion is a lightweight, high-performance Discord companion bot built with `discord.py` and `app_commands`. It features interactive UI elements, persistent voice structures, automated event RSVP management, and opt-in server alert topics.
 

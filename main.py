@@ -129,7 +129,7 @@ class DiscordBot(commands.Bot):
         await self.change_presence(
             activity=discord.Activity(
                 type=discord.ActivityType.playing, 
-                name="Dion Corp | v2.2.0"
+                name="Dion Corp | v2.2"
             )
         )
 

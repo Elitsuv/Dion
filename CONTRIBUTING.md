@@ -1,4 +1,4 @@
-# Contributing to Dion 🦦
+# Contributing to Dion
 
 Thank you for your interest in contributing to Dion! Please follow these guidelines to keep the codebase clean and reliable.
 

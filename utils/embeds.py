@@ -4,11 +4,11 @@ from datetime import datetime, timezone
 class DionEmbed(discord.Embed):
     """
     Base embed class for Dion to ensure consistent branding.
-    Color is white, and includes the otter 🦦 emoji optionally.
+    Color is white.
     """
     def __init__(self, title=None, description=None, **kwargs):
         super().__init__(
-            title=f"🦦 {title}" if title else None,
+            title=title,
             description=description,
             color=0xFFFFFF, # White branding
             **kwargs
