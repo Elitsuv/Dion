@@ -3,6 +3,7 @@ Help module for the Dion Discord Bot.
 Provides an organized, central command directory.
 """
 
+import os
 import discord
 from discord.ext import commands
 from discord import app_commands
@@ -41,7 +42,10 @@ class HelpView(discord.ui.View):
             pass
 
     def get_page_embed_and_file(self):
-        file = discord.File("assets/dion.png", filename="dion.png")
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.dirname(current_dir)
+        assets_path = os.path.join(project_root, "assets", "dion.png")
+        file = discord.File(assets_path, filename="dion.png")
         embed = DionEmbed(
             color=0x005A9C
         )
