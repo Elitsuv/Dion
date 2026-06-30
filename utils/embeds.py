@@ -7,10 +7,11 @@ class DionEmbed(discord.Embed):
     Color is white.
     """
     def __init__(self, title=None, description=None, **kwargs):
+        color = kwargs.pop('color', 0xFFFFFF)
         super().__init__(
             title=title,
             description=description,
-            color=0xFFFFFF, # White branding
+            color=color, # White branding by default
             **kwargs
         )
         self.timestamp = datetime.now(timezone.utc)
