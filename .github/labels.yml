@@ -1,0 +1,40 @@
+# GitHub Labels for Dion
+# Run with GitHub CLI (gh) or a label-sync action with prune: true to replace all default labels.
+
+# -----------------------------------------------------------------------------
+# Default GitHub labels to delete / replace:
+#   bug, documentation, duplicate, enhancement, good first issue,
+#   help wanted, invalid, question, wontfix
+# -----------------------------------------------------------------------------
+
+- name: "Di: Skill"
+  color: "1d76db"
+  description: "New agent skill proposal or addition"
+
+- name: "Di: Update"
+  color: "5319e7"
+  description: "Enhancement or update to an existing skill"
+
+- name: "Di: Fix"
+  color: "d93f0b"
+  description: "Bug fix or correction in a skill's instructions"
+
+- name: "Di: Chore"
+  color: "7057ff"
+  description: "Repository maintenance, templates, or workflows"
+
+- name: "Di: Docs"
+  color: "0075ca"
+  description: "Improvements to README, CONTRIBUTING, or guides"
+
+- name: "Di: Pedagogy"
+  color: "fbca04"
+  description: "Curriculum alignment or conceptual clarity for students"
+
+- name: "Di: Good First Issue"
+  color: "008672"
+  description: "Friendly task for students and first-time contributors"
+
+- name: "Di: Help Wanted"
+  color: "b60205"
+  description: "Extra domain expertise or student feedback requested"

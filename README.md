@@ -1,68 +1,107 @@
-# Dion v2.2.0
-
-Dion is a lightweight, high-performance Discord companion bot built with `discord.py` and `app_commands`. It features interactive UI elements, persistent voice structures, automated event RSVP management, and opt-in server alert topics.
-
-## ✨ Features
-
-- **🎤 Temporary Voice Channels:** Automatically spawns a private, customizable voice channel when users join a setup channel. Channels delete themselves when empty.
-- **📅 Event RSVP Management:** Schedule server events with interactive buttons (✅ ❔ ❌) and automated start alerts that persist and recover across bot reboots.
-- **🔔 Opt-in Server Alerts:** A clean subscription-based role announcement system so users only get pinged for topics they opt into.
-- **🛡️ Server Moderation:** Straightforward mod commands (`/warn`, `/warnings`, `/timeout`, `/kick`, `/ban`, `/purge`) logged directly to the local database.
-
----
-
-## 🛠️ Slash Commands Reference
-
-### 🎤 Voice Channels
-* `/vc_setup` (Admin) - Initializes the creation category and channel.
-* `/vc_lock` | `/vc_unlock` - Locks/unlocks access to your current voice channel.
-* `/vc_rename <name>` - Renames your temporary voice channel.
-* `/vc_limit <limit>` - Restricts maximum user count.
-* `/vc_delete` - Instantly deletes your temporary voice channel.
-
-### 📅 Events
-* `/event_create <title> <description> <duration>` - Starts a scheduled event with RSVP buttons (e.g., `2h`, `30m`).
-* `/event_list` - Lists upcoming guild events.
-* `/event_cancel <id>` (Admin) - Cancels a scheduled event and removes its timer.
-
-### 🔔 Opt-in Alerts
-* `/alert_create <name>` (Admin) - Creates a new subscription topic and guild role.
-* `/alert_delete <name>` (Admin) - Deletes an alert topic and its guild role.
-* `/alert_list` - Shows all available alert topics in the server.
-* `/alert_join <name>` - Subscribes/adds the alert role to the user.
-* `/alert_leave <name>` - Unsubscribes/removes the alert role from the user.
-* `/alert_send <name> <message>` (Admin) - Pings topic subscribers with a styled embed.
-
-### 🛡️ Moderation & Utility
-* `/warn <user> <reason>` - Issues a warning to a member.
-* `/warnings <user>` (also `/modlogs`) - Lists active warnings for a member.
-* `/timeout <user> <minutes> [reason]` - Times out a user.
-* `/kick <user> [reason]` - Kicks a user.
-* `/ban <user> [reason]` - Bans a user.
-* `/purge [amount]` - Deletes up to `amount` messages.
-* `/help` - Displays the bot command directory.
+<div align="center">
+  <img src="assets/dion.png" alt="Dion Logo" width="110" />
+  <h1>Dion</h1>
+  <p><strong>Modular Agent Skills for Engineering Students & Researchers</strong></p>
+  <p>
+    <a href="#skills">Skills</a> &bull;
+    <a href="#how-it-works">How It Works</a> &bull;
+    <a href="#usage">Usage</a> &bull;
+    <a href="#structure">Structure</a> &bull;
+    <a href="CONTRIBUTING.md">Contributing</a> &bull;
+    <a href="LICENSE">License</a>
+  </p>
+</div>
 
 ---
 
-## 🏗️ Architecture
+Most agent prompts return shallow code snippets, gloss over difficult mathematical steps, and ignore boundary conditions.
 
-- **Cogs (`cogs/`):** Separated into modular, reloadable extensions (`utility`, `events`, `alerts`, `moderation`, `help`).
-- **Database (`utils/db.py`):** Uses an asynchronous-safe local **SQLite** database (`data/dion.db`) to manage configs, warnings, RSVPs, and scheduled timers.
+**Dion** is a curated library of modular Agent Skills designed for computer science students, engineering graduates, and technical researchers. Each skill provides an AI agent with a deterministic, step-by-step protocol: tracing execution state without hand-waving, diagnosing runtime faults through hypothesis trees, planning modular system architectures, and dissecting academic research with empirical rigor.
+
+No wrappers. No runtime dependencies. Just high-density markdown protocols compatible with any agent environment.
 
 ---
 
-## 🚀 Setup & Local Running
+## Skills
 
-1. **Install dependencies:**
-   ```bash
-   pip install discord.py python-dotenv
-   ```
-2. **Environment Variables (`.env`):**
-   Create a `.env` file in the bot root:
-   ```env
-   DISCORD_TOKEN=your_discord_bot_token
-   ```
-3. **Run the bot:**
-   ```bash
-   python main.py
-   ```
+| Skill | Category | Description |
+| :--- | :--- | :--- |
+| [`concept-clarifier`](skills/concept-clarifier/SKILL.md) | Theory & Foundations | Explains complex algorithms and systems via physical intuition, formal invariants, minimal traces, and complexity bounds. |
+| [`code-explainer`](skills/code-explainer/SKILL.md) | Code Understanding | Deconstructs unfamiliar codebases line by line, mapping variable mutations, memory allocation models, and Big-O trade-offs. |
+| [`systematic-debugger`](skills/systematic-debugger/SKILL.md) | Debugging & Triage | Diagnoses runtime faults using scientific debugging: failure classification, hypothesis trees, MREs, and surgical patches. |
+| [`project-scaffolder`](skills/project-scaffolder/SKILL.md) | System Design | Scaffolds capstone and semester projects into modular monoliths, data contracts, and phased milestone roadmaps. |
+| [`research-synthesizer`](skills/research-synthesizer/SKILL.md) | Academic Research | Dissects research papers and lab reports, analyzing novelty claims, baseline validity, and practical reproducibility gaps. |
+| [`git-commit-architect`](skills/git-commit-architect/SKILL.md) | Version Control | Structures atomic commits, enforces conventional syntax, writes contextual commit bodies, and formats review-ready PRs. |
+
+---
+
+## How It Works
+
+Each skill in Dion is self-contained in a dedicated directory under `skills/` containing a `SKILL.md` file. 
+
+Every skill file begins with strict YAML frontmatter:
+
+```yaml
+---
+name: skill-name-in-kebab-case
+description: Clear, specific summary of the skill's purpose and precise trigger conditions.
+---
+```
+
+When an agent processes a task, it scans the YAML descriptions to select the relevant skill. The agent then follows the structured execution protocol defined in the markdown body, ensuring rigorous, predictable output.
+
+---
+
+## Usage
+
+### 1. In Agent-Assisted Workspaces
+Place the `skills/` folder in your workspace or agent knowledge directory. The agent will index the frontmatter and activate skills contextually based on user requests.
+
+### 2. Manual Instruction Injection
+Copy the contents of any `SKILL.md` directly into your agent's system prompt or project instructions file when focusing on a specific task (such as debugging an assignment or structuring a capstone).
+
+### 3. Prompting Example
+
+```text
+"I am debugging a C program that crashes with a segmentation fault when freeing a binary tree node.
+Here is the code and the valgrind trace. Apply the systematic-debugger skill to isolate the root cause."
+```
+
+---
+
+## Structure
+
+```text
+.
+├── assets/
+│   └── dion.png
+├── skills/
+│   ├── concept-clarifier/
+│   │   └── SKILL.md
+│   ├── code-explainer/
+│   │   └── SKILL.md
+│   ├── systematic-debugger/
+│   │   └── SKILL.md
+│   ├── project-scaffolder/
+│   │   └── SKILL.md
+│   ├── research-synthesizer/
+│   │   └── SKILL.md
+│   └── git-commit-architect/
+│       └── SKILL.md
+├── .github/
+│   ├── ISSUE_TEMPLATE/
+│   │   ├── bug_report.md
+│   │   └── skill_request.md
+│   ├── PULL_REQUEST_TEMPLATE.md
+│   ├── labels.yml
+│   └── sync-labels.sh
+├── README.md
+├── CONTRIBUTING.md
+└── LICENSE
+```
+
+---
+
+## License
+
+This project is licensed under the [Apache-2.0 License](LICENSE).
