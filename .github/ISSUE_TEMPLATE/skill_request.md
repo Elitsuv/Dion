@@ -6,8 +6,11 @@ labels: ["Di: Skill"]
 assignees: []
 ---
 
+### Proposed Category
+`skills/<category-name>`
+
 ### Proposed Skill Name
-`skills/<kebab-case-name>`
+`skills/<category-name>/<kebab-case-name>`
 
 ### Target Problem
 Identify the specific engineering, coursework, or research bottleneck this skill addresses.
@@ -27,3 +30,4 @@ Outline the step-by-step instructions the agent should follow:
 Provide a realistic prompt and an outline of the expected response:
 - **Prompt**:
 - **Expected Output**:
+

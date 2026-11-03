@@ -7,7 +7,7 @@ assignees: []
 ---
 
 ### Affected Skill
-`skills/<skill-name>`
+`skills/<category>/<skill-name>`
 
 ### Issue Summary
 Describe the flaw or unintended behavior observed when an agent executes this skill.
@@ -26,3 +26,4 @@ Explain what the skill protocol should have instructed the agent to do.
 
 ### Proposed Improvement
 Provide any suggested adjustments to the SKILL.md instructions or constraints.
+
