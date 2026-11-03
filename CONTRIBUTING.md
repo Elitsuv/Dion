@@ -17,13 +17,22 @@ Every skill in Dion serves as an executable instruction protocol for an AI agent
 
 ## Skill Structure Standard
 
-Every skill resides in its own folder under `skills/` using `kebab-case` naming:
+Every skill resides in its own folder inside an appropriate domain category folder under `skills/`, using strict `kebab-case` naming:
 
 ```text
 skills/
-└── your-skill-name/
-    └── SKILL.md
+└── <category>/
+    └── <skill-name>/
+        └── SKILL.md
 ```
+
+### Folder Rules
+
+- `skills/` contains only domain category folders (e.g., `debugging/`, `learning/`, `coding/`, `project/`, `git/`, `assignments/`, `research/`).
+- Category folders contain only skill folders.
+- Each skill folder contains exactly one `SKILL.md`.
+- No loose files inside `skills/` or category folders.
+- The YAML frontmatter `name` must exactly match the skill's folder name.
 
 ### SKILL.md Specification
 
@@ -42,11 +51,11 @@ Brief overview of the skill's purpose.
 ## Trigger Conditions
 Specific user queries or operational scenarios that activate this skill.
 
-## Step-by-Step Instructions
+## Execution Protocol
 The explicit, numbered protocol the agent must follow.
 
-## Quality Standards & Output Format
-Constraints and structured response template for the agent.
+## Output Quality Rules
+Constraints and structured response requirements for the agent.
 ```
 
 ---
@@ -78,26 +87,29 @@ bash .github/sync-labels.sh
 
 ## Contribution Workflow
 
-1. **Check Existing Work**: Browse open [Issues](https://github.com/Elitsuv/Dion/issues) or [Pull Requests](https://github.com/Elitsuv/Dion/pulls) to avoid duplicate efforts.
-2. **Open an Issue**: For new skill ideas, open a `Skill Request` issue first (`Di: Skill`) to discuss scope and structure.
+1. **Check Existing Work**: Browse open Issues or Pull Requests to avoid duplicate efforts.
+2. **Open an Issue**: For new skill ideas, open a `Skill Request` issue first (`Di: Skill`) to discuss scope, category, and structure.
 3. **Create a Branch**:
    ```bash
-   git checkout -b skill/your-skill-name
+   git checkout -b skill/category/your-skill-name
    ```
 4. **Author the Skill**:
-   - Create `skills/<your-skill-name>/SKILL.md`.
-   - Ensure the YAML frontmatter is valid.
+   - Create `skills/<category>/<your-skill-name>/SKILL.md`.
+   - Ensure the YAML frontmatter `name` matches `<your-skill-name>` exactly.
    - Verify instructions against the quality checklist.
-5. **Update the Index**: Add your new skill and a crisp one-line description to the table in `README.md`.
+5. **Update the Index**: Add your new skill and description to the skills table in `README.md` under its category, updating the total skills badge count.
 6. **Submit a Pull Request**: Use the PR template and complete all checklist items.
 
 ---
 
 ## Submission Checklist
 
-- [ ] Folder name is in `kebab-case`.
+- [ ] Category folder uses `kebab-case`.
+- [ ] Skill folder uses `kebab-case`.
 - [ ] `SKILL.md` contains valid YAML frontmatter (`name` and `description`).
+- [ ] YAML `name` matches folder name exactly.
 - [ ] No company or product names are mentioned anywhere.
 - [ ] No Python packages, web frameworks, or third-party wrappers are introduced.
 - [ ] Description clearly guides agents on when to activate the skill.
 - [ ] Instructions are concrete, structured, and free of generic conversational filler.
+
