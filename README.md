@@ -1,7 +1,7 @@
 <div align="center">
   <img src="assets/dion.png" alt="Dion Logo" width="110" style="border-radius: 20%;" />
   <h1>Dion</h1>
-  <p><strong>Systematic, opinionated AI agent skills for computer science and engineering workflows.</strong></p>
+  <p><strong>Systematic, opinionated AI agent skills for CS and Engineering workflows.</strong></p>
   <p>
     <a href="https://github.com/Elitsuv/Dion"><img src="https://img.shields.io/badge/skills-48-blue?style=flat-square" alt="Skills Count" /></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-green?style=flat-square" alt="License" /></a>
