@@ -1,115 +1,136 @@
 # Contributing to Dion
 
-Thank you for contributing to Dion. We build practical, disciplined agent skills for computer science students, engineering graduates, and technical researchers.
+Thank you for contributing to Dion. We build practical, disciplined, token-optimized agent skills for students, learners, and technical researchers following the `agentskills.io` open standard.
 
 ---
 
-## Design Principles
+## 3-Stage LLM Token Optimization Standard
 
-Every skill in Dion serves as an executable instruction protocol for an AI agent. We maintain high standards for all submissions:
+Every skill submitted to Dion MUST adhere to our strict 3-Stage LLM Token Optimization architecture. In agent environments, all skill names and descriptions are loaded into the system prompt on every turn, and context injection costs accumulate rapidly. Output tokens are 3x–5x more expensive than input tokens.
 
-1. **Practical Utility**: Focus on real engineering workflows: analyzing algorithms, isolating runtime faults, planning systems architecture, reviewing academic papers, and maintaining git hygiene. Avoid generic, conversational prompts.
-2. **Platform & Vendor Neutral**: Never mention any proprietary company, product, or vendor names. Skills must remain universally applicable across any agent runtime or environment.
-3. **No Unnecessary Scaffolding**: Keep skills clean. A single, well-crafted `SKILL.md` is preferred over unnecessary scripts or multi-file boilerplate.
-4. **Pedagogical Rigor**: Skills should teach principles, trace states, and build mental models, not just generate blind copy-paste snippets.
+```text
+┌─────────────────────────────────────────────────────────────┐
+│ STAGE 1: Cold-Start Router Diet (YAML Frontmatter)          │
+│ • Name + Description only (no extra keys)                   │
+│ • Description: strictly 15–24 words (~20–26 tokens)         │
+│ • Formula: [Action Verb] + [Deliverable] + ". Use when " +  │
+│            [Exact Trigger].                                 │
+├─────────────────────────────────────────────────────────────┤
+│ STAGE 2: Context Injection Diet (Markdown Body)             │
+│ • Body strictly under 120 tokens (~30 lines max)            │
+│ • Zero persona fluff ("You are a tutor...", "Please...")    │
+│ • Telegraphic arrows (->) for deterministic step transitions│
+│ • Exactly 3 sections: ## Protocol, ## Guardrails,           │
+│   ## Output Schema                                          │
+├─────────────────────────────────────────────────────────────┤
+│ STAGE 3: Output Token Clamp                                 │
+│ • Guardrails forbid greetings, pleasantries, & preambles    │
+│ • Output Schema provides compact structural skeletons       │
+│ • Maximum informational density per token generated         │
+└─────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## Skill Structure Standard
+## Repository Hierarchy
 
-Every skill resides in its own folder inside an appropriate domain category folder under `skills/`, using strict `kebab-case` naming:
+Skills are organized into domain categories under `skills/`:
 
 ```text
 skills/
-└── <category>/
-    └── <skill-name>/
-        └── SKILL.md
+├── assignments/      # Coursework decomposition, rubrics, lab reports
+├── coding/           # Syntax explanation, refactoring, complexity
+├── debugging/        # Concurrency, leaks, segfaults, stack traces
+├── documents/        # LaTeX, markdown tables, PDF specs, cheat sheets
+├── exam-prep/        # Question banks, autopsy, PYQ decoding, speed solve
+├── git/              # Atomic commits, branch workflows, conflict resolution
+├── interview/        # STAR framing, DSA patterns, mock interviews
+├── learning/         # Synthesis, Feynman intuition, derivations, Socratic
+├── productivity/     # Backlog recovery, active recall, sprint pacing
+├── project/          # Scaffolding, architecture, schemas, API contracts
+├── research/         # arXiv digests, literature review matrices
+├── revision/         # Ultra-dense 1-page trigger sheets
+└── testing/          # Edge cases, mocks, unit and integration suites
 ```
 
 ### Folder Rules
 
-- `skills/` contains only domain category folders (e.g., `debugging/`, `learning/`, `coding/`, `project/`, `git/`, `assignments/`, `research/`).
-- Category folders contain only skill folders.
+- `skills/` contains only domain category folders using `kebab-case`.
+- Category folders contain only skill folders using `kebab-case`.
 - Each skill folder contains exactly one `SKILL.md`.
-- No loose files inside `skills/` or category folders.
+- No loose files or extraneous assets inside skill folders.
 - The YAML frontmatter `name` must exactly match the skill's folder name.
 
-### SKILL.md Specification
+---
 
-Every `SKILL.md` must begin with YAML frontmatter containing `name` and `description`:
+## `SKILL.md` Specification
+
+Every `SKILL.md` must strictly follow this exact template:
 
 ```markdown
 ---
 name: your-skill-name
-description: A concise 1-2 sentence description explaining what the skill accomplishes and the exact trigger conditions for when an agent should invoke it.
+description: [Action Verb] + [Student Deliverable/Workflow] + ". Use when " + [Exact Trigger].
 ---
 
-# Your Skill Name
+# Skill Title
 
-Brief overview of the skill's purpose.
+## Protocol
+1. Step 1 -> Telegraphic deterministic action.
+2. Step 2 -> Explicit state transformation.
+3. Step 3 -> Verification and artifact production.
 
-## Trigger Conditions
-Specific user queries or operational scenarios that activate this skill.
+## Guardrails
+- Never output filler or pleasantries.
+- Never [domain negative constraint].
+- Never [scope boundary or unverified claim].
 
-## Execution Protocol
-The explicit, numbered protocol the agent must follow.
-
-## Output Quality Rules
-Constraints and structured response requirements for the agent.
+## Output Schema
+### [Section 1]
+- Item: [Compact key-value or formula]
+### [Section 2]
+[Dense structural skeleton without conversational narrative]
 ```
 
+### Constraints Checklist
+
+1. **YAML Description**:
+   - Word count: strictly between **15 and 24 words** (`15 <= count <= 24`).
+   - Formula: Starts with a capitalized 3rd-person singular action verb (e.g., `Condenses`, `Formats`, `Generates`, `Synthesizes`, `Extracts`, `Diagnoses`, `Analyzes`, `Structures`, `Deconstructs`, `Refactors`, `Derives`, `Identifies`, `Optimizes`), states the deliverable, includes the literal anchor `". Use when "`, and ends with a period.
+   - Keys: Exactly `name:` and `description:`. Never add extra keys.
+2. **Markdown Body**:
+   - Token budget: strictly **< 120 tokens** (measured via `scripts/audit_tokens.py`).
+   - Line limit: **<= 30 lines**.
+   - Exactly 3 sections: `## Protocol`, `## Guardrails`, `## Output Schema`.
+   - Protocol: 3 to 5 numbered steps using telegraphic arrows (`->`).
+   - Guardrails: 3 negative constraints starting with `Never ...`.
+   - Output token clamp: Guardrails must explicitly forbid conversational intros, pleasantries, preambles, and verbose explanations.
+
 ---
 
-## Dion Labels
+## Local Token Audit
 
-Dion organizes issues and Pull Requests using branded `Di: ...` labels:
-
-| Label | Description |
-| :--- | :--- |
-| `Di: Skill` | New agent skill proposal or addition |
-| `Di: Update` | Enhancement or update to an existing skill |
-| `Di: Fix` | Bug fix or correction in a skill's instructions |
-| `Di: Chore` | Repository maintenance, templates, or workflows |
-| `Di: Docs` | Improvements to README, CONTRIBUTING, or guides |
-| `Di: Pedagogy` | Curriculum alignment or conceptual clarity for students |
-| `Di: Good First Issue` | Friendly task for students and first-time contributors |
-| `Di: Help Wanted` | Extra domain expertise or student feedback requested |
-
-### Label Setup & Sync
-
-Maintainers can synchronize these labels and purge default GitHub repository labels using the included script:
+Before opening a Pull Request, run the zero-dependency token auditor from repository root:
 
 ```bash
-bash .github/sync-labels.sh
+python scripts/audit_tokens.py
 ```
+
+All 59+ skills must report `PASS` with zero failures.
 
 ---
 
 ## Contribution Workflow
 
-1. **Check Existing Work**: Browse open Issues or Pull Requests to avoid duplicate efforts.
-2. **Open an Issue**: For new skill ideas, open a `Skill Request` issue first (`Di: Skill`) to discuss scope, category, and structure.
-3. **Create a Branch**:
+1. **Check Existing Work**: Browse open Issues or PRs to avoid duplicate skills.
+2. **Open a Skill Proposal**: Open an issue tagged `Di: Skill` to agree on domain, naming, and triggers.
+3. **Branch**:
    ```bash
-   git checkout -b skill/category/your-skill-name
+   git checkout -b skill/<category>/<skill-name>
    ```
 4. **Author the Skill**:
-   - Create `skills/<category>/<your-skill-name>/SKILL.md`.
-   - Ensure the YAML frontmatter `name` matches `<your-skill-name>` exactly.
-   - Verify instructions against the quality checklist.
-5. **Update the Index**: Add your new skill and description to the skills table in `README.md` under its category, updating the total skills badge count.
-6. **Submit a Pull Request**: Use the PR template and complete all checklist items.
-
----
-
-## Submission Checklist
-
-- [ ] Category folder uses `kebab-case`.
-- [ ] Skill folder uses `kebab-case`.
-- [ ] `SKILL.md` contains valid YAML frontmatter (`name` and `description`).
-- [ ] YAML `name` matches folder name exactly.
-- [ ] No company or product names are mentioned anywhere.
-- [ ] No Python packages, web frameworks, or third-party wrappers are introduced.
-- [ ] Description clearly guides agents on when to activate the skill.
-- [ ] Instructions are concrete, structured, and free of generic conversational filler.
-
+   - Create `skills/<category>/<skill-name>/SKILL.md`.
+   - Run `python scripts/audit_tokens.py` to confirm < 120 token body and 15–24 word frontmatter.
+5. **Update Repository Index**:
+   - Update `README.md` category tables and total count badge.
+6. **Submit PR**: Complete all items in the Pull Request template.

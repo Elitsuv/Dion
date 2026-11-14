@@ -1,15 +1,16 @@
 <div align="center">
   <img src="assets/dion.png" alt="Dion Logo" width="110" style="border-radius: 20%;" />
   <h1>Dion</h1>
-  <p><strong>Systematic, opinionated AI agent skills for CS and Engineering workflows.</strong></p>
+  <p><strong>Systematic, token-optimized AI agent skills for student workflows, problem-solving, and engineering.</strong></p>
   <p>
-    <a href="https://github.com/Elitsuv/Dion"><img src="https://img.shields.io/badge/skills-48-blue?style=flat-square" alt="Skills Count" /></a>
+    <a href="https://github.com/Elitsuv/Dion"><img src="https://img.shields.io/badge/skills-59-blue?style=flat-square" alt="Skills Count" /></a>
+    <a href="https://agentskills.io"><img src="https://img.shields.io/badge/spec-agentskills.io-purple?style=flat-square" alt="AgentSkills Spec" /></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-green?style=flat-square" alt="License" /></a>
     <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/contributions-welcome-orange?style=flat-square" alt="Contributions Welcome" /></a>
   </p>
   <p>
-    <a href="#skills-by-category">Skills</a> &bull;
-    <a href="#what-dion-is">What Dion Is</a> &bull;
+    <a href="#built-to-save-student-tokens-how-dion-works-under-the-hood">Token Architecture</a> &bull;
+    <a href="#skills-by-category">Skills Directory</a> &bull;
     <a href="#how-to-use">How to Use</a> &bull;
     <a href="#repository-structure">Structure</a> &bull;
     <a href="CONTRIBUTING.md">Contributing</a> &bull;
@@ -21,153 +22,238 @@
 
 ## What Dion Is
 
-Most AI agent prompts produce shallow snippets, gloss over algorithmic invariants, and fail to isolate boundary conditions.
+Most AI prompts for students are bloated with conversational filler, produce shallow summaries, skip crucial mathematical steps, and burn through expensive API tokens or free-tier quotas within minutes.
 
-**Dion** is a curated library of 48 modular, domain-categorized Agent Skills engineered specifically for computer science students, engineering graduates, and technical researchers. Each skill equips an AI agent with a deterministic, step-by-step execution protocol: decomposing complex assignment rubrics, formatting laboratory reports, designing normalized database schemas, hunting memory leaks in C/C++, tracing execution state across memory spaces, isolating runtime crashes via falsifiable hypothesis trees, and reviewing literature with empirical rigor.
+**Dion** is a curated library of **59 modular Agent Skills** across **13 academic and engineering domains**, designed to fulfill a dual mission:
+1. **Universal Student Agency**: Equip students and learners with systematic, universal AI agent capabilities for studying, revising, unrolling derivations, preparing for exams, coding, debugging, and building—without locking them into narrow subject silos.
+2. **Native Token Optimization (`agentskills.io` spec)**: Save learners massive amounts of input and output tokens using native progressive disclosure mechanics.
 
-No wrappers. No runtime dependencies. Just clean, platform-agnostic markdown protocols compatible with any agent runtime.
+No runtime dependencies. No bloated wrappers. Just high-density markdown protocols compatible with any agent runtime.
+
+---
+
+## Built to Save Student Tokens (How Dion Works Under the Hood)
+
+Students and builders operate on tight API budgets and constrained free tiers. Dion implements a deterministic **3-Stage LLM Token Optimization** architecture across every skill in the repository:
+
+```text
+┌───────────────────────────────────────────────────────────────────────────┐
+│                     3-STAGE TOKEN OPTIMIZATION ENGINE                     │
+├───────────────────────────────────────────────────────────────────────────┤
+│ STAGE 1: Cold-Start Router Diet (System Prompt Ingestion)                 │
+│ • Agent runtimes inject ALL skill names and descriptions on every turn.   │
+│ • Dion clamps descriptions strictly to 15–24 words (~20–26 tokens) using  │
+│   a standardized formula: [Verb] + [Deliverable] + ". Use when " + [Cue]. │
+│ • Entire 59-skill router footprint: ~2,296 tokens (vs 15,000+ unoptimized)│
+├───────────────────────────────────────────────────────────────────────────┤
+│ STAGE 2: Context Injection Diet (Markdown Skill Body)                     │
+│ • When a skill activates, only its specific protocol enters context.     │
+│ • Dion caps every SKILL.md body strictly below 120 tokens (~30 lines max).│
+│ • Strips 100% of persona fluff ("You are a world-class tutor...") in     │
+│   favor of telegraphic imperative arrows (->).                            │
+│ • Exact 3-section protocol: ## Protocol, ## Guardrails, ## Output Schema. │
+├───────────────────────────────────────────────────────────────────────────┤
+│ STAGE 3: Output Token Clamp (Student Quota Protection)                    │
+│ • Output tokens cost 3x–5x more than input tokens.                       │
+│ • Dion's guardrails strictly forbid conversational pleasantries, intros,  │
+│   preambles, and filler ("Sure! I'd be happy to explain that for you...").│
+│ • Compact structural skeletons enforce maximum informational density      │
+│   per token generated.                                                    │
+└───────────────────────────────────────────────────────────────────────────┘
+```
+
+### Verified Live via Token Auditor
+
+Dion includes a zero-dependency auditing script to verify all token budgets in terminal:
+
+```bash
+python scripts/audit_tokens.py
+```
+
+```text
+================================================================================================
+DION AGENT SKILLS: 3-STAGE LLM TOKEN OPTIMIZATION AUDIT
+Spec: agentskills.io progressive disclosure | Target: Body < 120 toks, Desc 15-24 words
+================================================================================================
+Audit Summary: 59 total skills | 59 PASSED | 0 FAILED
+Aggregate Token Footprint (Passing): Router=2296 toks (avg 38.9) | Body=6647 toks (avg 112.7)
+All skills 100% compliant with 3-Stage Token Optimization architecture!
+```
 
 ---
 
 ## Skills by Category
 
-Total active skills: **48** across **11** engineering domains.
+Total active skills: **59** across **13** academic and engineering domains.
 
-### `assignments/`
-
-| Skill | Description |
-| :--- | :--- |
-| [`assignment-decomposer`](skills/assignments/assignment-decomposer/SKILL.md) | Breaks down complex engineering assignments, lab specs, and project rubrics into granular subtasks, test cases, and dependency graphs. Use when a student receives an assignment specification and needs a systematic execution plan. |
-| [`citation-formatter`](skills/assignments/citation-formatter/SKILL.md) | Formats and validates academic citations across IEEE, ACM, APA, and BibTeX formats for engineering papers and lab reports. Use when compiling bibliographies, references, or citations. |
-| [`lab-report-writer`](skills/assignments/lab-report-writer/SKILL.md) | Formats engineering and science lab reports with standard academic sections, error propagation calculations, and observation tables. Use when a student needs to write or structure an engineering lab report. |
-| [`presentation-slide-planner`](skills/assignments/presentation-slide-planner/SKILL.md) | Structures technical presentation slide decks for engineering capstones, term projects, and defense talks. Use when planning visual slides, speaker notes, and time allocations. |
-| [`rubric-checker`](skills/assignments/rubric-checker/SKILL.md) | Evaluates assignment drafts against official grading rubrics and assignment criteria to identify missing requirements. Use before submitting an assignment to maximize grade accuracy. |
-
-### `coding/`
+### `assignments/` (Coursework & Submission Planning)
 
 | Skill | Description |
 | :--- | :--- |
-| [`code-commenter`](skills/coding/code-commenter/SKILL.md) | Writes concise, professional docstrings, function contracts, and inline comments that explain the 'why' rather than narrating syntax. Use when documenting code. |
-| [`code-explainer`](skills/coding/code-explainer/SKILL.md) | Deconstructs unfamiliar code snippets and algorithms by tracing execution flow, state mutations, memory layout, and asymptotic complexity. Use when a user asks to understand, review, or walk through existing code line by line. |
-| [`code-refactorer`](skills/coding/code-refactorer/SKILL.md) | Refactors messy student code into clean, modular, and idiomatic production-quality implementations while preserving existing behavior. Use when cleaning up working but unreadable code. |
-| [`complexity-analyzer`](skills/coding/complexity-analyzer/SKILL.md) | Derives formal asymptotic Big-O time and space complexity with recurrence relations, loop summations, and call stack depth. Use when analyzing algorithm efficiency. |
-| [`pattern-matcher`](skills/coding/pattern-matcher/SKILL.md) | Identifies appropriate software design patterns (Gang of Four, architectural patterns) to solve software design problems cleanly. Use when architecting object-oriented systems. |
+| [`assignment-decomposer`](skills/assignments/assignment-decomposer/SKILL.md) | Deconstructs complex assignment rubrics into milestone subtasks, dependency sequences, and verification tests. Use when planning an academic coursework submission. |
+| [`citation-formatter`](skills/assignments/citation-formatter/SKILL.md) | Formats and validates academic bibliographies across IEEE, ACM, APA, and BibTeX standards without syntax errors. Use when compiling research paper references. |
+| [`lab-report-writer`](skills/assignments/lab-report-writer/SKILL.md) | Structures engineering laboratory reports with formal abstracts, error propagation models, and tabular observations. Use when drafting scientific or lab submissions. |
+| [`presentation-slide-planner`](skills/assignments/presentation-slide-planner/SKILL.md) | Plans technical slide decks and defense talks with time allocations, key visuals, and speaker cues. Use when structuring academic project presentations. |
+| [`rubric-checker`](skills/assignments/rubric-checker/SKILL.md) | Evaluates coursework drafts against official grading rubrics to diagnose missing criteria and scoring vulnerabilities. Use when auditing drafts prior to submission. |
 
-### `debugging/`
-
-| Skill | Description |
-| :--- | :--- |
-| [`concurrency-deadlock-detector`](skills/debugging/concurrency-deadlock-detector/SKILL.md) | Identifies race conditions, deadlocks, and synchronization pitfalls across threads, mutexes, and async routines. Use when multi-threaded code hangs or yields nondeterministic results. |
-| [`memory-leak-hunter`](skills/debugging/memory-leak-hunter/SKILL.md) | Analyzes Valgrind logs, AddressSanitizer output, and memory profiling reports to trace unreleased allocations and pointer leaks. Use when debugging C/C++ memory management. |
-| [`segfault-tracer`](skills/debugging/segfault-tracer/SKILL.md) | Diagnoses segmentation faults and bus errors in C/C++ by analyzing pointer arithmetic, null references, and buffer overflows. Use when a binary terminates with SIGSEGV. |
-| [`stack-trace-analyzer`](skills/debugging/stack-trace-analyzer/SKILL.md) | Parses complex, multi-threaded, or nested stack traces and compiler error dumps to pinpoint the exact root-cause frame. Use when confronted with dense error logs. |
-| [`systematic-debugger`](skills/debugging/systematic-debugger/SKILL.md) | Diagnoses runtime crashes, stack traces, logic failures, and test regressions using a hypothesis-driven debugging workflow. Use when code fails with an error, exception, segmentation fault, or incorrect output. |
-
-### `documents/`
+### `coding/` (Source Architecture & Algorithmic Rigor)
 
 | Skill | Description |
 | :--- | :--- |
-| [`cheat-sheet-designer`](skills/documents/cheat-sheet-designer/SKILL.md) | Designs ultra-dense, multi-column quick-reference cheat sheets for programming languages, CLI commands, and technical tools. Use when creating fast reference guides. |
-| [`latex-document-formatter`](skills/documents/latex-document-formatter/SKILL.md) | Generates clean, compilable LaTeX documents with IEEE/ACM templates, math equations, tables, and TikZ diagrams. Use when writing technical papers and lab reports in LaTeX. |
-| [`markdown-table-formatter`](skills/documents/markdown-table-formatter/SKILL.md) | Creates clean, aligned, and readable Markdown comparison tables, feature matrices, and data schemas. Use when formatting tabular technical information. |
-| [`pdf-report-generator`](skills/documents/pdf-report-generator/SKILL.md) | Structures clean, publication-ready markdown and styling specifications optimized for PDF conversion (Pandoc, Typst, Weasyprint). Use when preparing professional PDF documents. |
+| [`code-commenter`](skills/coding/code-commenter/SKILL.md) | Generates concise docstrings, function contracts, and invariant comments explaining logic rationale rather than syntax. Use when documenting technical source code. |
+| [`code-explainer`](skills/coding/code-explainer/SKILL.md) | Deconstructs complex algorithms and codebases by tracing execution states, memory mutations, and asymptotic bounds. Use when analyzing unfamiliar technical implementations. |
+| [`code-refactorer`](skills/coding/code-refactorer/SKILL.md) | Refactors messy source code into idiomatic, modular, and maintainable architectures while preserving functional behavior. Use when cleaning technical code implementations. |
+| [`complexity-analyzer`](skills/coding/complexity-analyzer/SKILL.md) | Derives formal asymptotic Big-O time and space complexity using recurrence relations and loop summations. Use when evaluating algorithmic efficiency. |
+| [`pattern-matcher`](skills/coding/pattern-matcher/SKILL.md) | Identifies optimal software design patterns and architectural idioms to resolve structural coupling problems. Use when architecting object-oriented software systems. |
 
-### `git/`
-
-| Skill | Description |
-| :--- | :--- |
-| [`branch-strategy-planner`](skills/git/branch-strategy-planner/SKILL.md) | Designs clean git branch and release workflows (Git Flow, GitHub Flow, Trunk-Based) for student project teams. Use when coordinating collaborative team repositories. |
-| [`git-commit-architect`](skills/git/git-commit-architect/SKILL.md) | Structures atomic commits, writes conventional commit messages with contextual rationale, and formats reviewable Pull Requests. Use when a user needs to commit changes, clean up git history, or prepare a PR. |
-| [`gitignore-curator`](skills/git/gitignore-curator/SKILL.md) | Generates clean, language-specific .gitignore files that exclude build artifacts, virtual environments, and secrets. Use when setting up or cleaning git repositories. |
-| [`merge-conflict-resolver`](skills/git/merge-conflict-resolver/SKILL.md) | Guides students step-by-step through resolving complex git merge and rebase conflicts without data loss. Use when git operations halt with conflict markers. |
-
-### `interview/`
+### `debugging/` (Fault Isolation & Memory Diagnostics)
 
 | Skill | Description |
 | :--- | :--- |
-| [`behavioral-star-framer`](skills/interview/behavioral-star-framer/SKILL.md) | Structures behavioral engineering interview responses into concise, impact-focused STAR method narratives. Use when preparing answers for behavioral questions. |
-| [`dsa-pattern-matcher`](skills/interview/dsa-pattern-matcher/SKILL.md) | Maps coding interview problem statements to core Data Structures and Algorithms patterns (Two Pointers, Sliding Window, Monotonic Stack, Union-Find). Use when approaching LeetCode-style technical interview questions. |
-| [`mock-interview-simulator`](skills/interview/mock-interview-simulator/SKILL.md) | Conducts structured, simulated technical coding and systems interviews with interactive problem statements, hint systems, and rubric feedback. Use when preparing for engineering job interviews. |
-| [`resume-bullet-optimizer`](skills/interview/resume-bullet-optimizer/SKILL.md) | Transforms passive, task-oriented resume points into strong, impact-quantified engineering accomplishment statements. Use when editing technical resumes. |
+| [`concurrency-deadlock-detector`](skills/debugging/concurrency-deadlock-detector/SKILL.md) | Identifies race conditions, deadlocks, and synchronization bugs in multithreaded and asynchronous software. Use when concurrent code hangs or behaves nondeterministically. |
+| [`memory-leak-hunter`](skills/debugging/memory-leak-hunter/SKILL.md) | Analyzes Valgrind logs, AddressSanitizer dumps, and heap profiles to pinpoint unreleased allocations and pointer leaks. Use when debugging memory management. |
+| [`segfault-tracer`](skills/debugging/segfault-tracer/SKILL.md) | Diagnoses segmentation faults and memory corruption errors by analyzing pointer arithmetic, null references, and stack frames. Use when applications crash with SIGSEGV. |
+| [`stack-trace-analyzer`](skills/debugging/stack-trace-analyzer/SKILL.md) | Parses dense compiler dumps and multithreaded stack traces to isolate the originating root-cause failure frame. Use when debugging runtime crashes. |
+| [`systematic-debugger`](skills/debugging/systematic-debugger/SKILL.md) | Diagnoses runtime crashes, regressions, and logic bugs using scientific falsification trees and minimal reproduction cases. Use when debugging failing code systems. |
 
-### `learning/`
-
-| Skill | Description |
-| :--- | :--- |
-| [`concept-clarifier`](skills/learning/concept-clarifier/SKILL.md) | Explains core computer science and engineering concepts through physical intuition, formal invariants, minimal traces, and complexity bounds. Use when a user asks to learn, clarify, or prepare for exams on an algorithm, system architecture, or theoretical model. |
-| [`exam-drill`](skills/learning/exam-drill/SKILL.md) | Generates high-yield practice problems, edge-case questions, and conceptual drills tailored for engineering exams and technical assessments. Use when a student requests test preparation, practice questions, or concept verification. |
-| [`feynman-explainer`](skills/learning/feynman-explainer/SKILL.md) | Explains complex technical and engineering phenomena using simple language, direct intuition, and zero jargon via the Feynman Technique. Use when struggling to grasp an abstract concept. |
-| [`flashcard-builder`](skills/learning/flashcard-builder/SKILL.md) | Generates high-retention spaced repetition flashcards in Anki-compatible format for engineering terminology, algorithms, and architectures. Use when creating study decks. |
-| [`formula-sheet-generator`](skills/learning/formula-sheet-generator/SKILL.md) | Distills complex engineering subjects into dense, high-yield formula sheets with variable definitions, units, and boundary constraints. Use when preparing review sheets for exams. |
-
-### `productivity/`
+### `documents/` (Publishing & Formatting Systems)
 
 | Skill | Description |
 | :--- | :--- |
-| [`cli-tool-scaffolder`](skills/productivity/cli-tool-scaffolder/SKILL.md) | Scaffolds ergonomic command-line utility tools in Python, Go, or Rust with argument parsing, subcommands, and help text. Use when building developer tools. |
-| [`semester-schedule-planner`](skills/productivity/semester-schedule-planner/SKILL.md) | Organizes engineering course syllabi, assignments, exams, and project deadlines into an integrated semester timeline. Use when planning academic workloads. |
-| [`study-sprint-timer`](skills/productivity/study-sprint-timer/SKILL.md) | Designs structured Pomodoro and deep-work study sprint schedules tailored for complex technical problem sets. Use when planning focused study sessions. |
+| [`cheat-sheet-designer`](skills/documents/cheat-sheet-designer/SKILL.md) | Designs ultra-dense, multi-column technical cheat sheets for programming languages, CLI utilities, and mathematical conventions. Use when synthesizing quick-reference study guides. |
+| [`latex-document-formatter`](skills/documents/latex-document-formatter/SKILL.md) | Generates clean, compilable LaTeX code with formal IEEE and ACM formatting, math environments, and tables. Use when formatting academic papers. |
+| [`markdown-table-formatter`](skills/documents/markdown-table-formatter/SKILL.md) | Constructs clean, column-aligned Markdown comparison tables, feature matrices, and technical schemas without formatting inconsistencies. Use when structuring tabular documentation. |
+| [`pdf-report-generator`](skills/documents/pdf-report-generator/SKILL.md) | Structures clean, publication-ready markdown and CSS specifications optimized for headless PDF rendering engines. Use when generating exportable technical documents. |
 
-### `project/`
-
-| Skill | Description |
-| :--- | :--- |
-| [`api-spec-designer`](skills/project/api-spec-designer/SKILL.md) | Designs RESTful and RPC API specifications conforming to OpenAPI/Swagger standards with clear status codes and payloads. Use when defining backend interfaces. |
-| [`capstone-milestone-tracker`](skills/project/capstone-milestone-tracker/SKILL.md) | Breaks multi-month senior design or capstone projects into bi-weekly deliverables with risk assessments and verification criteria. Use when tracking long-term projects. |
-| [`database-schema-designer`](skills/project/database-schema-designer/SKILL.md) | Designs normalized relational SQL schemas or NoSQL document models with primary keys, indexes, and foreign constraints. Use when modeling database architectures. |
-| [`project-scaffolder`](skills/project/project-scaffolder/SKILL.md) | Plans software system architectures, directory structures, data contracts, and milestone delivery roadmaps for capstones and technical builds. Use when a user is designing or starting a new software project. |
-| [`readme-architect`](skills/project/readme-architect/SKILL.md) | Crafts clear, professional GitHub README files with architecture diagrams, quick-start setup commands, and feature matrices. Use when documenting software projects. |
-
-### `research/`
+### `exam-prep/` (Question Making & Exam Mastery)
 
 | Skill | Description |
 | :--- | :--- |
-| [`arxiv-digest-builder`](skills/research/arxiv-digest-builder/SKILL.md) | Summarizes and categorizes recent arXiv preprints in computer science and engineering into actionable technical digests. Use when keeping up with research trends. |
+| [`question-bank-generator`](skills/exam-prep/question-bank-generator/SKILL.md) | Generates tiered practice questions from foundational to advanced trap levels with hidden solutions. Use when practicing a topic or syllabus module. |
+| [`mistake-autopsy-analyzer`](skills/exam-prep/mistake-autopsy-analyzer/SKILL.md) | Diagnoses wrong answers from practice sessions into root-cause categories with targeted remedial fixes. Use when reviewing practice test or exam errors. |
+| [`pyq-pattern-decoder`](skills/exam-prep/pyq-pattern-decoder/SKILL.md) | Extracts recurring question archetypes, high-yield subtopics, and traps from past exam papers. Use when planning exam strategy or paper analysis. |
+| [`speed-solve-optimizer`](skills/exam-prep/speed-solve-optimizer/SKILL.md) | Optimizes exam problem-solving speed using dimensional analysis, symmetry shortcuts, and elimination heuristics. Use when improving timed test-solving efficiency. |
+
+### `git/` (Version Control & Collaboration)
+
+| Skill | Description |
+| :--- | :--- |
+| [`branch-strategy-planner`](skills/git/branch-strategy-planner/SKILL.md) | Designs clean git branching and release workflows like GitHub Flow and Trunk-Based Development. Use when establishing collaborative team version control. |
+| [`git-commit-architect`](skills/git/git-commit-architect/SKILL.md) | Structures atomic git commits and drafts conventional commit messages with clear engineering rationale. Use when staging changes or preparing pull requests. |
+| [`gitignore-curator`](skills/git/gitignore-curator/SKILL.md) | Generates clean, language-specific gitignore configurations excluding build artifacts, caches, and secrets. Use when initializing or cleaning git repositories. |
+| [`merge-conflict-resolver`](skills/git/merge-conflict-resolver/SKILL.md) | Guides step-by-step resolution of git merge and rebase conflicts without data loss. Use when git operations halt with conflict markers. |
+
+### `interview/` (Technical & Behavioral Assessments)
+
+| Skill | Description |
+| :--- | :--- |
+| [`behavioral-star-framer`](skills/interview/behavioral-star-framer/SKILL.md) | Structures technical interview responses into concise, impact-quantified STAR method narratives. Use when preparing for behavioral and cultural interviews. |
+| [`dsa-pattern-matcher`](skills/interview/dsa-pattern-matcher/SKILL.md) | Maps algorithmic coding interview problems to core data structure and algorithm patterns. Use when solving competitive programming and LeetCode problems. |
+| [`mock-interview-simulator`](skills/interview/mock-interview-simulator/SKILL.md) | Conducts simulated technical coding and systems design interviews with graduated hints and rubric evaluations. Use when practicing engineering interviews. |
+| [`resume-bullet-optimizer`](skills/interview/resume-bullet-optimizer/SKILL.md) | Transforms passive student resume bullet points into impact-quantified engineering accomplishment statements. Use when editing technical resumes. |
+
+### `learning/` (Chapter Mastery & Conceptual Understanding)
+
+| Skill | Description |
+| :--- | :--- |
+| [`chapter-synthesizer`](skills/learning/chapter-synthesizer/SKILL.md) | Condenses full chapters or lecture notes into mental models, governing laws, and testable invariants. Use when starting or summarizing a syllabus chapter. |
+| [`concept-clarifier`](skills/learning/concept-clarifier/SKILL.md) | Explains core computing concepts through formal invariants, physical analogies, and minimal traces. Use when clarifying complex algorithms, architectures, or theoretical models. |
+| [`derivation-unroller`](skills/learning/derivation-unroller/SKILL.md) | Expands skipped steps in textbook proofs and mathematical derivations into line-by-line transitions. Use when a step in a proof feels unclear. |
+| [`exam-drill`](skills/learning/exam-drill/SKILL.md) | Generates high-yield practice problems, edge-case drills, and verification questions for engineering exams. Use when preparing for tests or concept assessments. |
+| [`feynman-explainer`](skills/learning/feynman-explainer/SKILL.md) | Explains difficult technical and scientific concepts using plain language, intuitive analogies, and zero jargon. Use when struggling with abstract theoretical topics. |
+| [`flashcard-builder`](skills/learning/flashcard-builder/SKILL.md) | Generates high-retention spaced repetition flashcards in Anki-compatible format for technical terms and formulas. Use when preparing long-term study decks. |
+| [`formula-sheet-generator`](skills/learning/formula-sheet-generator/SKILL.md) | Distills technical subjects into dense formula sheets with variable definitions, physical units, and validity boundaries. Use when preparing exam cheat sheets. |
+| [`memory-hook-builder`](skills/learning/memory-hook-builder/SKILL.md) | Generates high-retention mnemonics, contrast tables, and intuitive analogies for dense academic concepts. Use when memorizing tricky facts, formulas, or edge cases. |
+| [`socratic-hint-tutor`](skills/learning/socratic-hint-tutor/SKILL.md) | Guides students through challenging academic problems using graduated conceptual hints and questions. Use when clearing concepts or stuck on a problem. |
+
+### `productivity/` (Study Habits & Backlog Recovery)
+
+| Skill | Description |
+| :--- | :--- |
+| [`active-recall-quizzer`](skills/productivity/active-recall-quizzer/SKILL.md) | Executes rapid-fire active recall questioning on notes and evaluates student answers without conversational filler. Use when testing knowledge retention after reading. |
+| [`cli-tool-scaffolder`](skills/productivity/cli-tool-scaffolder/SKILL.md) | Scaffolds ergonomic command-line utility tools in Python, Go, or Rust with argument parsing and subcommands. Use when building developer tools. |
+| [`semester-schedule-planner`](skills/productivity/semester-schedule-planner/SKILL.md) | Organizes academic course syllabi, assignments, exams, and project milestones into a structured semester timeline. Use when planning coursework workloads. |
+| [`study-sprint-timer`](skills/productivity/study-sprint-timer/SKILL.md) | Designs structured Pomodoro and deep-work sprint schedules tailored for complex technical problem sets. Use when planning focused study sessions. |
+| [`syllabus-backlog-crusher`](skills/productivity/syllabus-backlog-crusher/SKILL.md) | Constructs dependency-aware daily study schedules to clear accumulated syllabus backlogs before deadlines. Use when falling behind on academic coursework targets. |
+
+### `project/` (Architecture & Build Scaffolding)
+
+| Skill | Description |
+| :--- | :--- |
+| [`api-spec-designer`](skills/project/api-spec-designer/SKILL.md) | Designs RESTful and RPC API specifications conforming to OpenAPI standards with schemas and error payloads. Use when defining backend service contracts. |
+| [`capstone-milestone-tracker`](skills/project/capstone-milestone-tracker/SKILL.md) | Breaks multi-month senior design and capstone projects into bi-weekly deliverables with risk assessments. Use when tracking engineering capstone projects. |
+| [`database-schema-designer`](skills/project/database-schema-designer/SKILL.md) | Designs normalized relational SQL schemas or NoSQL document models with indexes, keys, and integrity constraints. Use when architecting database storage. |
+| [`project-scaffolder`](skills/project/project-scaffolder/SKILL.md) | Plans software directory structures, modular architectures, data contracts, and milestone roadmaps. Use when bootstrapping new technical engineering projects. |
+| [`readme-architect`](skills/project/readme-architect/SKILL.md) | Crafts professional GitHub README files with architectural diagrams, quickstart setup guides, and feature tables. Use when documenting technical repositories. |
+
+### `research/` (Academic Literature & Preprints)
+
+| Skill | Description |
+| :--- | :--- |
+| [`arxiv-digest-builder`](skills/research/arxiv-digest-builder/SKILL.md) | Summarizes recent arXiv preprints into actionable technical digests with core contributions and benchmark results. Use when tracking research literature. |
 | [`literature-review-matrix`](skills/research/literature-review-matrix/SKILL.md) | Builds comparative literature review matrices cross-examining research papers across methodology, datasets, and benchmark results. Use when synthesizing related works. |
-| [`paper-abstract-extractor`](skills/research/paper-abstract-extractor/SKILL.md) | Extracts core problem statements, methods, and quantitative findings from academic papers into concise executive briefings. Use when quickly scanning paper suitability. |
-| [`research-synthesizer`](skills/research/research-synthesizer/SKILL.md) | Analyzes academic papers, preprints, and technical surveys by assessing novelty claims, benchmark rigor, and reproducibility hurdles. Use when a user reviews research papers or prepares technical literature surveys. |
+| [`paper-abstract-extractor`](skills/research/paper-abstract-extractor/SKILL.md) | Extracts problem statements, proposed methodologies, and quantitative results from academic papers into structured briefings. Use when screening academic literature. |
+| [`research-synthesizer`](skills/research/research-synthesizer/SKILL.md) | Evaluates academic papers by assessing novelty claims, benchmark rigor, and reproducibility hurdles. Use when reviewing research papers or literature surveys. |
 
-### `testing/`
+### `revision/` (Last-Minute Trigger Sheets)
 
 | Skill | Description |
 | :--- | :--- |
-| [`edge-case-finder`](skills/testing/edge-case-finder/SKILL.md) | Identifies subtle boundary conditions, numeric overflows, and degenerate inputs that break code. Use when testing algorithm robustness or debugging hidden judge failures. |
+| [`revision-sheet-compressor`](skills/revision/revision-sheet-compressor/SKILL.md) | Compresses bulky study notes into an ultra-dense one-page revision trigger sheet. Use when preparing for upcoming exams, finals, or mock tests. |
+
+### `testing/` (Verification & Edge Cases)
+
+| Skill | Description |
+| :--- | :--- |
+| [`edge-case-finder`](skills/testing/edge-case-finder/SKILL.md) | Identifies subtle boundary conditions, numeric overflows, and degenerate inputs that break code. Use when testing algorithm robustness or debugging failures. |
 | [`integration-test-planner`](skills/testing/integration-test-planner/SKILL.md) | Designs end-to-end integration test plans covering API routes, database transactions, and component interfaces. Use when verifying multi-tier systems. |
-| [`mock-data-factory`](skills/testing/mock-data-factory/SKILL.md) | Generates realistic mock datasets, JSON payloads, and database seed rows conforming to specific schemas and constraints. Use when preparing test data. |
-| [`unit-test-generator`](skills/testing/unit-test-generator/SKILL.md) | Generates comprehensive unit test suites with boundary assertions, fixtures, and parameterized tests. Use when writing automated tests for functions and classes. |
+| [`mock-data-factory`](skills/testing/mock-data-factory/SKILL.md) | Generates realistic mock datasets, JSON payloads, and database seed rows conforming to specific schemas. Use when preparing test data. |
+| [`unit-test-generator`](skills/testing/unit-test-generator/SKILL.md) | Generates comprehensive unit test suites with boundary assertions, fixtures, and parameterized test cases. Use when writing automated code tests. |
 
 ---
 
 ## How to Use
 
-Each skill is self-contained in its own folder and contains a standardized `SKILL.md` file with strict YAML frontmatter:
-
-```yaml
----
-name: skill-folder-name
-description: What it does and when to use it. Be specific.
----
-```
-
-### 1. In Agent-Assisted Workspaces
-Add the `skills/` directory to your workspace or agent knowledge directory. The agent parses the YAML metadata and activates the corresponding skill based on your query.
-
-### 2. Manual Instruction Injection
-Copy the contents of any `SKILL.md` directly into your agent's system prompt or project instructions when working on a specific task (such as formatting a lab report, debugging a segmentation fault, or preparing for a technical interview).
-
-### 3. Prompting Example
+Each skill follows the standard `agentskills.io` directory format:
 
 ```text
-"I received a 12-page specification for our Operating Systems virtual memory assignment.
-Here is the rubric and requirements handout.
-Use the assignment-decomposer skill to break this into an implementation plan with test cases."
+skills/<category>/<skill-name>/SKILL.md
+```
+
+### 1. In AI Agent Runtimes
+Drop the `skills/` directory into your agent workspace (Antigravity, Claude Code, Cursor, Copilot, etc.). The runtime discovers all skills via the YAML router and activates the relevant protocol when triggered.
+
+### 2. Direct Instruction Injection
+Copy the contents of any `SKILL.md` directly into your system prompt or custom instructions when tackling a focused task (e.g., preparing for a midterm with `mistake-autopsy-analyzer`, or unrolling a skipped textbook proof with `derivation-unroller`).
+
+### 3. Prompting Examples
+
+#### Example A: Studying & Derivation
+```text
+"I am studying Chapter 4 of my Electrodynamics notes. Between equation 4.12 and 4.13, 
+the textbook skips three steps with 'it follows trivially'.
+Use derivation-unroller to unroll the intermediate algebra line by line."
+```
+
+#### Example B: Exam Preparation & Error Review
+```text
+"Here is the problem from yesterday's calculus mock test, my attempted working, 
+and the examiner's answer key.
+Use mistake-autopsy-analyzer to categorize my mistake and give me a targeted counter-drill."
+```
+
+#### Example C: Backlog Recovery Schedule
+```text
+"I have 6 uncompleted operating systems modules and my exam is in 10 days. 
+Here are the syllabus topics.
+Use syllabus-backlog-crusher to build a realistic dependency-aware daily study schedule."
 ```
 
 ---
 
 ## Contributing
 
-Contributions from students, researchers, and developers are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) for skill authoring standards, folder hierarchy rules, and Pull Request checklists.
+We welcome contributions from students, researchers, and engineers. Please read [CONTRIBUTING.md](CONTRIBUTING.md) to understand the strict 24-word description ceiling and 120-token body diet before opening a Pull Request.
 
 ---
 

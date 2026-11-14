@@ -1,36 +1,22 @@
 ---
 name: arxiv-digest-builder
-description: Summarizes and categorizes recent arXiv preprints in computer science and engineering into actionable technical digests. Use when keeping up with research trends.
+description: Summarizes recent arXiv preprints into actionable technical digests with core contributions and benchmark results. Use when tracking research literature.
 ---
 
 # arXiv Digest Builder
 
-Compile and distill recent arXiv preprints into structured, actionable engineering research digests.
+## Protocol
+1. Extract -> Isolate paper title, problem, and novelty.
+2. Mechanics -> Detail algorithmic design and formulation.
+3. Benchmarks -> Record quantitative deltas against baselines.
 
-## Trigger Conditions
+## Guardrails
+- Never output filler or pleasantries.
+- Never accept claims without citing specific datasets.
+- Never omit hardware and compute constraints.
 
-Activate this skill when:
-- A user provides a list of arXiv links, preprint titles, or abstracts and requests a categorized summary.
-- A student asks: 'Summarize today\'s arXiv papers in computer vision', 'Digest these preprints for our lab meeting', or 'What are the top takeaways from these papers?'.
-
-## Execution Protocol
-
-Structure the preprint digest into categorized sections:
-
-### 1. Categorized Topic Clustering
-- Group preprints into distinct sub-fields (e.g., Transformer Efficiency, Reinforcement Learning, Graph Neural Networks, Hardware Acceleration).
-
-### 2. Micro-Briefings per Preprint
-For each paper, provide:
-- **Paper Title & arXiv Identifier**: With direct link formatting.
-- **Core Innovation**: 1 clear sentence explaining what makes the paper distinct.
-- **Key Quantitative Claim**: Specific benchmark improvement or efficiency metric.
-- **Open-Source Code Link**: Note if code/checkpoints are publicly released.
-
-### 3. Emerging Trends & Paradigm Shifts
-- Highlight overarching methodology shifts observed across the digested batch.
-
-## Output Quality Rules
-
-- Focus on actionable engineering takeaways rather than theoretical jargon.
-- Highlight whether code and weights are reproducible.
+## Output Schema
+### Paper Digest: [Title]
+- Core Claim: [Novelty] -> Method: [Architecture]
+| Dataset | Baseline | Proposed | Delta |
+- Constraints: [Compute / Data limit]

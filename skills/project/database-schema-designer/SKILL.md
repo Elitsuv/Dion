@@ -1,43 +1,21 @@
 ---
 name: database-schema-designer
-description: Designs normalized relational SQL schemas or NoSQL document models with primary keys, indexes, and foreign constraints. Use when modeling database architectures.
+description: Designs normalized relational SQL schemas or NoSQL document models with indexes, keys, and integrity constraints. Use when architecting database storage.
 ---
 
 # Database Schema Designer
 
-Design normalized, performant database schemas with explicit primary keys, foreign constraints, and indexing strategies.
+## Protocol
+1. Entities -> Identify entities, primary keys, relationships.
+2. Normalize -> Enforce Third Normal Form (3NF) for integrity.
+3. Optimize -> Define indexes and foreign keys for top queries.
 
-## Trigger Conditions
+## Guardrails
+- Never output filler or pleasantries.
+- Never omit primary keys or foreign key constraints.
+- Never define columns without data types and nullability.
 
-Activate this skill when:
-- A user is designing data models for a web application, mobile backend, or coursework database project.
-- A student asks: 'Design an SQL database for a university system', 'Model this in PostgreSQL', or 'What tables do I need for an e-commerce app?'.
-
-## Execution Protocol
-
-Execute this database modeling sequence:
-
-### 1. Entity-Relationship Identification
-- Identify core entities, attributes, and relationship cardinalities (1:1, 1:N, N:M).
-- Resolve many-to-many relationships using clean join/junction tables.
-
-### 2. Relational Normalization (3NF)
-- Enforce Third Normal Form:
-  - Eliminate repeating groups (1NF).
-  - Ensure all non-key attributes depend on the entire primary key (2NF).
-  - Eliminate transitive dependencies (3NF).
-
-### 3. Production-Ready SQL DDL Statements
-- Write clean SQL table definitions:
-  - Explicit data types (`UUID`, `VARCHAR`, `TIMESTAMP WITH TIME ZONE`, `DECIMAL`).
-  - Column constraints (`NOT NULL`, `DEFAULT`, `CHECK`, `UNIQUE`).
-  - Explicit `FOREIGN KEY` references with `ON DELETE CASCADE` or `ON DELETE RESTRICT`.
-
-### 4. Indexing & Query Optimization
-- Specify index definitions (`CREATE INDEX`) on high-cardinality foreign keys and search columns.
-
-## Output Quality Rules
-
-- Use snake_case for table and column names.
-- Always include `created_at` and `updated_at` audit timestamps.
-- Explicitly explain indexing trade-offs (query speed vs write throughput).
+## Output Schema
+### SQL DDL Schema
+[Clean SQL table definitions with constraints]
+- `CREATE INDEX idx_[table]_[col] ON [table]([col]);`
