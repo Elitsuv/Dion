@@ -1,42 +1,22 @@
 ---
 name: pattern-matcher
-description: Identifies appropriate software design patterns (Gang of Four, architectural patterns) to solve software design problems cleanly. Use when architecting object-oriented systems.
+description: Identifies optimal software design patterns and architectural idioms to resolve structural coupling problems. Use when architecting object-oriented software systems.
 ---
 
 # Pattern Matcher
 
-Identify, compare, and implement the optimal software design patterns for object-oriented and systems engineering problems.
+## Protocol
+1. Analyze -> Identify coupling and variation points.
+2. Match -> Evaluate patterns against trade-offs.
+3. Specify -> Define component contracts and dispatch.
 
-## Trigger Conditions
+## Guardrails
+- Never output filler or pleasantries.
+- Never use design patterns where functions suffice.
+- Never recommend patterns without stating trade-offs.
 
-Activate this skill when:
-- A user describes an architectural design bottleneck or class design challenge.
-- A student asks: 'What design pattern should I use here?', 'Show me how to apply the Strategy pattern in C++', or 'Compare Factory vs Builder for this problem'.
-
-## Execution Protocol
-
-Follow this design pattern evaluation framework:
-
-### 1. Problem Classification
-- Categorize the architectural requirement:
-  - **Creational**: Object instantiation complexity, subclass decoupling (Factory, Builder, Singleton).
-  - **Structural**: Composition, interface adaptation, decorator wrapping (Adapter, Composite, Facade).
-  - **Behavioral**: Algorithm substitution, event notification, state transitions (Strategy, Observer, State).
-
-### 2. Pattern Candidate Comparison
-- Compare 2 candidate patterns against the problem constraints:
-  | Pattern | Core Advantage | Overhead / Boilerplate | Best Fit Scenario |
-  | :--- | :--- | :--- | :--- |
-  | Pattern A | ... | ... | ... |
-  | Pattern B | ... | ... | ... |
-
-### 3. Idiomatic Implementation
-- Provide a clean, minimal code demonstration implementing the chosen pattern without extraneous framework baggage.
-
-### 4. Anti-Pattern Warning
-- Detail how this pattern is commonly abused or over-engineered (e.g., premature Singleton, over-abstraction with unnecessary interfaces).
-
-## Output Quality Rules
-
-- Keep implementations compact and focused on the interaction between participants.
-- Warn against over-engineering when a simple function closure suffices.
+## Output Schema
+### Pattern & Architecture
+- Pattern: [Name] -> Solves: [Coupling issue]
+- Structure: [Collaborators & contracts]
+- Trade-Off: [Benefit vs indirection cost]
